@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch API",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/MainSolutions.API/MainSolutions.API.csproj",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    {
+      "name": "Launch React",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "${workspaceFolder}/MainSolutions.React",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Local:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "BROWSER": "none"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Launch API + React",
+      "configurations": ["Launch API", "Launch React"],
+      "stopAll": true
+    }
+  ]
+}
