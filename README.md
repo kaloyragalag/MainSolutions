@@ -1,24 +1,33 @@
 # MainSolutions
 
-A full-stack solution with a .NET 10 Web API and React 19 (TypeScript) frontend.
+A full-stack solution with a .NET 10 Web API, React 19 TypeScript frontend, and xUnit test project.
 
-## Structure
+## Solution Structure
 
 ```
 MainSolutions/
-├── docker-compose.yml          ← SQL Server 2022 container
-├── MainSolutions.sln           ← .NET solution
-├── MainSolutions.API/          ← .NET 10 Web API + EF Core
+├── .vscode/
+├── MainSolutions.API/
 │   ├── Controllers/
-│   ├── Data/AppDbContext.cs
+│   ├── Data/
+│   ├── DTOs/
 │   ├── Models/
-│   ├── Program.cs
-│   └── appsettings.json
-└── MainSolutions.React/        ← React 19 + TypeScript
-    ├── public/
-    └── src/
-        ├── App.tsx             ← Home screen
-        └── App.css
+│   ├── Repositories/
+│   │   └── Interfaces/
+│   └── Services/
+│       └── Interfaces/
+├── MainSolutions.React/
+│   └── src/
+│       ├── components/
+│       │   └── Layout/
+│       ├── context/
+│       ├── pages/
+│       ├── services/
+│       └── types/
+└── MainSolutions.Test/
+    ├── Controllers/
+    ├── Repositories/
+    └── Services/
 ```
 
 ## Prerequisites
@@ -36,17 +45,25 @@ MainSolutions/
 docker-compose up -d
 ```
 
-### 2. Run the API
+### 2. Apply database migrations
 
 ```bash
 cd MainSolutions.API
-dotnet restore
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+```
+
+### 3. Run the API
+
+```bash
+cd MainSolutions.API
 dotnet run
 ```
 
-API + Swagger: **https://localhost:5001/swagger**
+API: **https://localhost:5001**
+Swagger UI: **https://localhost:5001/swagger**
 
-### 3. Run the React App
+### 4. Run the React app
 
 ```bash
 cd MainSolutions.React
@@ -54,17 +71,63 @@ npm install
 npm start
 ```
 
-React App: **http://localhost:3000**
+React app: **http://localhost:3000**
 
-## EF Core Migrations
+### 5. Run in VS Code (both together)
+
+Open the `MainSolutions` root folder in VS Code, go to **Run & Debug** (`Ctrl+Shift+D`), select **Launch API + React** and press `F5`.
+
+## Seed Data
+
+On first run the API automatically seeds an admin user:
+
+| Field    | Value                        |
+|----------|------------------------------|
+| Email    | `admin@mainsolutions.com`    |
+| Password | `Admin@123`                  |
+
+## API Endpoints
+
+| Method | Endpoint              | Description              | Auth required |
+|--------|-----------------------|--------------------------|---------------|
+| POST   | /api/auth/login       | Authenticate user        | No            |
+| POST   | /api/auth/register    | Register new user        | No            |
+
+## Running Tests
 
 ```bash
-# From solution root
-dotnet ef migrations add InitialCreate --project MainSolutions.API
-dotnet ef database update --project MainSolutions.API
+cd MainSolutions.Test
+dotnet test
 ```
+
+To see detailed output:
+
+```bash
+dotnet test --logger "console;verbosity=detailed"
+```
+
+### Test coverage
+
+| File                      | Tests | What is covered                                      |
+|---------------------------|-------|------------------------------------------------------|
+| AuthServiceTests.cs       | 6     | Login, wrong password, inactive user, register, duplicate email, password hashing |
+| AuthControllerTests.cs    | 4     | 200 on login, 401 on bad credentials, 201 on register, 409 on duplicate |
+| UserRepositoryTests.cs    | 8     | GetByEmail, GetById, Create, Update, Exists — with in-memory DB |
+
+## Tech Stack
+
+| Layer      | Technology                          |
+|------------|-------------------------------------|
+| API        | .NET 10, ASP.NET Core               |
+| ORM        | Entity Framework Core 10            |
+| Database   | SQL Server 2022 (Docker)            |
+| Auth       | JWT Bearer + BCrypt                 |
+| API Docs   | NSwag (Swagger UI)                  |
+| Frontend   | React 19, TypeScript, React Router  |
+| Testing    | xUnit, Moq, FluentAssertions        |
 
 ## Notes
 
-- CORS is pre-configured to allow `http://localhost:3000` → API
 - Change `SA_PASSWORD` in `docker-compose.yml` and `appsettings.json` before deploying
+- Change `Jwt:Key` in `appsettings.json` to a strong secret before deploying
+- CORS is pre-configured to allow `http://localhost:3000`
