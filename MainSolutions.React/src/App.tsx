@@ -1,8 +1,13 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import BasePage from './components/Layout/BasePage';
+import LoginPage from './pages/Login/LoginPage';
+import RegisterPage from './pages/Register/RegisterPage';
 import './App.css';
 
-const App: React.FC = () => {
-  return (
+const Home: React.FC = () => (
+  <BasePage>
     <div className="home">
       <div className="home__content">
         <div className="home__logo">
@@ -12,26 +17,23 @@ const App: React.FC = () => {
         </div>
         <h1 className="home__title">MainSolutions</h1>
         <p className="home__subtitle">Your application is ready to build.</p>
-        <div className="home__actions">
-          <a
-            className="home__btn home__btn--primary"
-            href="https://localhost:5001/swagger"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open API Docs
-          </a>
-          <a
-            className="home__btn home__btn--secondary"
-            href="https://react.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Docs
-          </a>
-        </div>
       </div>
     </div>
+  </BasePage>
+);
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 
