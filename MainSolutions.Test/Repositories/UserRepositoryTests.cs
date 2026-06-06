@@ -1,0 +1,130 @@
+using FluentAssertions;
+using MainSolutions.API.Data;
+using MainSolutions.API.Models;
+using MainSolutions.API.Repositories;
+using Microsoft.EntityFrameworkCore;
+
+namespace MainSolutions.Test.Repositories;
+
+public class UserRepositoryTests : IDisposable
+{
+    private readonly AppDbContext _context;
+    private readonly UserRepository _repository;
+
+    public UserRepositoryTests()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        _context = new AppDbContext(options);
+        _repository = new UserRepository(_context);
+    }
+
+    [Fact]
+    public async Task GetByEmailAsync_ExistingEmail_ReturnsUser()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetByEmailAsync("john@example.com");
+
+        result.Should().NotBeNull();
+        result!.Email.Should().Be("john@example.com");
+    }
+
+    [Fact]
+    public async Task GetByEmailAsync_IsCaseInsensitive()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetByEmailAsync("JOHN@EXAMPLE.COM");
+
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetByEmailAsync_NonExistentEmail_ReturnsNull()
+    {
+        var result = await _repository.GetByEmailAsync("ghost@example.com");
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ExistingId_ReturnsUser()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetByIdAsync(user.Id);
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(user.Id);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_NonExistentId_ReturnsNull()
+    {
+        var result = await _repository.GetByIdAsync(9999);
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CreateAsync_ValidUser_PersistsToDatabase()
+    {
+        var user = CreateUser("new@example.com");
+
+        var created = await _repository.CreateAsync(user);
+
+        created.Id.Should().BeGreaterThan(0);
+        _context.Users.Should().ContainSingle(u => u.Email == "new@example.com");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ExistingUser_SavesChanges()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        user.FirstName = "Updated";
+        await _repository.UpdateAsync(user);
+
+        var updated = await _context.Users.FindAsync(user.Id);
+        updated!.FirstName.Should().Be("Updated");
+    }
+
+    [Fact]
+    public async Task ExistsAsync_ExistingEmail_ReturnsTrue()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var exists = await _repository.ExistsAsync("john@example.com");
+        exists.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_NonExistentEmail_ReturnsFalse()
+    {
+        var exists = await _repository.ExistsAsync("ghost@example.com");
+        exists.Should().BeFalse();
+    }
+
+    private static User CreateUser(string email) => new()
+    {
+        Email = email,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+        FirstName = "John",
+        LastName = "Doe",
+        IsActive = true,
+        CreatedAt = DateTime.UtcNow
+    };
+
+    public void Dispose() => _context.Dispose();
+}
