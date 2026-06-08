@@ -1,4 +1,4 @@
-using MainSolutions.API.DTOs;
+using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 

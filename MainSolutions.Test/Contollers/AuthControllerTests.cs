@@ -1,6 +1,6 @@
 using FluentAssertions;
 using MainSolutions.API.Controllers;
-using MainSolutions.API.DTOs;
+using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

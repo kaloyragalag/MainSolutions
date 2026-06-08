@@ -1,5 +1,5 @@
 using FluentAssertions;
-using MainSolutions.API.DTOs;
+using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Models;
 using MainSolutions.API.Repositories.Interfaces;
 using MainSolutions.API.Services;
