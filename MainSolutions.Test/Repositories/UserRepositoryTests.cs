@@ -1,6 +1,5 @@
-using FluentAssertions;
 using MainSolutions.API.Data;
-using MainSolutions.API.Models;
+using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +19,48 @@ public class UserRepositoryTests : IDisposable
         _context = new AppDbContext(options);
         _repository = new UserRepository(_context);
     }
+
+    #region GetAll
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsPaginatedResults()
+    {
+        await _context.Users.AddRangeAsync(
+            CreateUser("user1@example.com"),
+            CreateUser("user2@example.com"),
+            CreateUser("user3@example.com")
+        );
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetAllAsync(new PaginationQuery { Page = 1, PageSize = 2 });
+
+        result.Items.Count().Should().Be(2);
+        result.TotalCount.Should().Be(3);
+        result.TotalPages.Should().Be(2);
+        result.HasNextPage.Should().BeTrue();
+        result.HasPreviousPage.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_SecondPage_ReturnsRemainingItems()
+    {
+        await _context.Users.AddRangeAsync(
+            CreateUser("user1@example.com"),
+            CreateUser("user2@example.com"),
+            CreateUser("user3@example.com")
+        );
+        await _context.SaveChangesAsync();
+
+        var result = await _repository.GetAllAsync(new PaginationQuery { Page = 2, PageSize = 2 });
+
+        result.Items.Count().Should().Be(1);
+        result.HasNextPage.Should().BeFalse();
+        result.HasPreviousPage.Should().BeTrue();
+    }
+
+    #endregion
+
+    #region GetByEmail
 
     [Fact]
     public async Task GetByEmailAsync_ExistingEmail_ReturnsUser()
@@ -53,6 +94,10 @@ public class UserRepositoryTests : IDisposable
         result.Should().BeNull();
     }
 
+    #endregion
+
+    #region GetById
+
     [Fact]
     public async Task GetByIdAsync_ExistingId_ReturnsUser()
     {
@@ -73,6 +118,10 @@ public class UserRepositoryTests : IDisposable
         result.Should().BeNull();
     }
 
+    #endregion
+
+    #region Create
+
     [Fact]
     public async Task CreateAsync_ValidUser_PersistsToDatabase()
     {
@@ -83,6 +132,10 @@ public class UserRepositoryTests : IDisposable
         created.Id.Should().BeGreaterThan(0);
         _context.Users.Should().ContainSingle(u => u.Email == "new@example.com");
     }
+
+    #endregion
+
+    #region Update
 
     [Fact]
     public async Task UpdateAsync_ExistingUser_SavesChanges()
@@ -98,8 +151,36 @@ public class UserRepositoryTests : IDisposable
         updated!.FirstName.Should().Be("Updated");
     }
 
+    #endregion
+
+    #region Delete
+
     [Fact]
-    public async Task ExistsAsync_ExistingEmail_ReturnsTrue()
+    public async Task DeleteAsync_ExistingUser_RemovesFromDatabase()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        await _repository.DeleteAsync(user.Id);
+
+        var deleted = await _context.Users.FindAsync(user.Id);
+        deleted.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_NonExistentId_DoesNotThrow()
+    {
+        var act = () => _repository.DeleteAsync(9999);
+        await act.Should().NotThrowAsync();
+    }
+
+    #endregion
+
+    #region Exists
+
+    [Fact]
+    public async Task ExistsAsync_ByEmail_ExistingEmail_ReturnsTrue()
     {
         var user = CreateUser("john@example.com");
         await _context.Users.AddAsync(user);
@@ -110,11 +191,33 @@ public class UserRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task ExistsAsync_NonExistentEmail_ReturnsFalse()
+    public async Task ExistsAsync_ByEmail_NonExistentEmail_ReturnsFalse()
     {
         var exists = await _repository.ExistsAsync("ghost@example.com");
         exists.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task ExistsAsync_ById_ExistingId_ReturnsTrue()
+    {
+        var user = CreateUser("john@example.com");
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var exists = await _repository.ExistsAsync(user.Id);
+        exists.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_ById_NonExistentId_ReturnsFalse()
+    {
+        var exists = await _repository.ExistsAsync(9999);
+        exists.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region Helpers
 
     private static User CreateUser(string email) => new()
     {
@@ -125,6 +228,8 @@ public class UserRepositoryTests : IDisposable
         IsActive = true,
         CreatedAt = DateTime.UtcNow
     };
+
+    #endregion
 
     public void Dispose() => _context.Dispose();
 }
