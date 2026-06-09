@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Product> Products => Set<Product>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +25,26 @@ public class AppDbContext : DbContext
             entity.Property(u => u.PasswordHash).IsRequired();
             entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.HasIndex(c => c.Name).IsUnique();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            entity.Property(c => c.Description).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
+            entity.Property(p => p.Description).HasMaxLength(1000);
+            entity.Property(p => p.Price).HasColumnType("decimal(18,2)");
+            entity.HasOne(p => p.Category)
+                  .WithMany(c => c.Products)
+                  .HasForeignKey(p => p.CategoryId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
