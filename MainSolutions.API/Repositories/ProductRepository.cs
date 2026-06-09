@@ -12,6 +12,11 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     {
     }
 
+    public async Task<Product?> GetByIdWithCategoryAsync(int id)
+        => await _dbSet
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
     public async Task<bool> CategoryExistsAsync(int categoryId)
         => await _context.Categories.AnyAsync(c => c.Id == categoryId);
 
@@ -26,11 +31,12 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
             var sortDesc = query.SortOrder.ToLower() == "desc";
             queryable = query.SortBy.ToLower() switch
             {
-                "name"     => sortDesc ? queryable.OrderByDescending(p => p.Name)     : queryable.OrderBy(p => p.Name),
-                "price"    => sortDesc ? queryable.OrderByDescending(p => p.Price)    : queryable.OrderBy(p => p.Price),
-                "stock"    => sortDesc ? queryable.OrderByDescending(p => p.Stock)    : queryable.OrderBy(p => p.Stock),
-                "createdat"=> sortDesc ? queryable.OrderByDescending(p => p.CreatedAt): queryable.OrderBy(p => p.CreatedAt),
-                _          => queryable
+                "id"        => sortDesc ? queryable.OrderByDescending(p => p.Id)        : queryable.OrderBy(p => p.Id),
+                "name"      => sortDesc ? queryable.OrderByDescending(p => p.Name)      : queryable.OrderBy(p => p.Name),
+                "price"     => sortDesc ? queryable.OrderByDescending(p => p.Price)     : queryable.OrderBy(p => p.Price),
+                "stock"     => sortDesc ? queryable.OrderByDescending(p => p.Stock)     : queryable.OrderBy(p => p.Stock),
+                "createdat" => sortDesc ? queryable.OrderByDescending(p => p.CreatedAt) : queryable.OrderBy(p => p.CreatedAt),
+                _           => queryable
             };
         }
 

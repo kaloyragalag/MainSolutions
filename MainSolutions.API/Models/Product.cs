@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace MainSolutions.API.Models;
 
 public class Product
@@ -12,5 +14,7 @@ public class Product
     public DateTime? UpdatedAt { get; set; }
 
     public int CategoryId { get; set; }
-    public Category Category { get; set; } = null!;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Category? Category { get; set; }
 }

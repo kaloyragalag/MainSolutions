@@ -16,6 +16,15 @@ public class ProductsController : BaseController<Product>
         _productRepository = productRepository;
     }
 
+    [HttpGet("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public override async Task<IActionResult> GetById(int id)
+    {
+        var product = await _productRepository.GetByIdWithCategoryAsync(id);
+        return product is null ? NotFound() : Ok(product);
+    }
+
     public override async Task<IActionResult> Create([FromBody] Product entity)
     {
         if (!await _productRepository.CategoryExistsAsync(entity.CategoryId))
@@ -25,6 +34,9 @@ public class ProductsController : BaseController<Product>
         return await base.Create(entity);
     }
 
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
     {
         var existing = await _service.GetByIdAsync(id);
@@ -44,7 +56,10 @@ public class ProductsController : BaseController<Product>
         fields.Remove("createdAt");
         fields.Remove("id");
 
-        return await base.Update(id, fields);
+        await base.Update(id, fields);
+
+        var updated = await _productRepository.GetByIdWithCategoryAsync(id);
+        return Ok(updated);
     }
 
     protected override object GetEntityId(Product entity) => entity.Id;
