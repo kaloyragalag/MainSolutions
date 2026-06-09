@@ -12,9 +12,20 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     }
 
     public async Task<User?> GetByEmailAsync(string email)
-        => await _dbSet
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        => await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
     public async Task<bool> ExistsAsync(string email)
         => await _dbSet.AnyAsync(u => u.Email.ToLower() == email.ToLower());
+
+    protected override IQueryable<User> ApplySearch(IQueryable<User> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+
+        var term = search.ToLower();
+        return query.Where(u =>
+            u.FirstName.ToLower().Contains(term) ||
+            u.LastName.ToLower().Contains(term) ||
+            u.Email.ToLower().Contains(term)
+        );
+    }
 }

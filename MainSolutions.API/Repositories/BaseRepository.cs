@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using MainSolutions.API.Data;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
@@ -18,9 +19,14 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
 
     public virtual async Task<PagedResult<T>> GetAllAsync(PaginationQuery query)
     {
-        var totalCount = await _dbSet.CountAsync();
+        var queryable = _dbSet.AsQueryable();
 
-        var items = await _dbSet
+        queryable = ApplySearch(queryable, query.Search);
+        queryable = ApplySort(queryable, query.SortBy, query.SortOrder);
+
+        var totalCount = await queryable.CountAsync();
+
+        var items = await queryable
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
@@ -62,4 +68,34 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
 
     public virtual async Task<bool> ExistsAsync(int id)
         => await _dbSet.FindAsync(id) is not null;
+
+    // Override in derived repositories to define searchable fields
+    protected virtual IQueryable<T> ApplySearch(IQueryable<T> query, string? search)
+        => query;
+
+    private static IQueryable<T> ApplySort(IQueryable<T> query, string? sortBy, string sortOrder)
+    {
+        if (string.IsNullOrWhiteSpace(sortBy)) return query;
+
+        var property = typeof(T).GetProperty(
+            sortBy,
+            System.Reflection.BindingFlags.IgnoreCase |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.Instance
+        );
+
+        if (property is null) return query;
+
+        var param = Expression.Parameter(typeof(T), "x");
+        var body = Expression.PropertyOrField(param, property.Name);
+        var lambda = Expression.Lambda(body, param);
+
+        var methodName = sortOrder.ToLower() == "desc" ? "OrderByDescending" : "OrderBy";
+        var method = typeof(Queryable)
+            .GetMethods()
+            .First(m => m.Name == methodName && m.GetParameters().Length == 2)
+            .MakeGenericMethod(typeof(T), property.PropertyType);
+
+        return (IQueryable<T>)method.Invoke(null, [query, lambda])!;
+    }
 }

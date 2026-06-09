@@ -1,5 +1,5 @@
-using MainSolutions.API.Models;
 using MainSolutions.API.Data;
+using MainSolutions.API.Models;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,10 +17,26 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
 
     public override async Task<PagedResult<Product>> GetAllAsync(PaginationQuery query)
     {
-        var totalCount = await _dbSet.CountAsync();
+        var queryable = _dbSet.Include(p => p.Category).AsQueryable();
 
-        var items = await _dbSet
-            .Include(p => p.Category)
+        queryable = ApplySearch(queryable, query.Search);
+
+        if (!string.IsNullOrWhiteSpace(query.SortBy))
+        {
+            var sortDesc = query.SortOrder.ToLower() == "desc";
+            queryable = query.SortBy.ToLower() switch
+            {
+                "name"     => sortDesc ? queryable.OrderByDescending(p => p.Name)     : queryable.OrderBy(p => p.Name),
+                "price"    => sortDesc ? queryable.OrderByDescending(p => p.Price)    : queryable.OrderBy(p => p.Price),
+                "stock"    => sortDesc ? queryable.OrderByDescending(p => p.Stock)    : queryable.OrderBy(p => p.Stock),
+                "createdat"=> sortDesc ? queryable.OrderByDescending(p => p.CreatedAt): queryable.OrderBy(p => p.CreatedAt),
+                _          => queryable
+            };
+        }
+
+        var totalCount = await queryable.CountAsync();
+
+        var items = await queryable
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync();
@@ -32,5 +48,17 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
             Page = query.Page,
             PageSize = query.PageSize
         };
+    }
+
+    protected override IQueryable<Product> ApplySearch(IQueryable<Product> query, string? search)
+    {
+        if (string.IsNullOrWhiteSpace(search)) return query;
+
+        var term = search.ToLower();
+        return query.Where(p =>
+            p.Name.ToLower().Contains(term) ||
+            p.Description.ToLower().Contains(term) ||
+            p.Category.Name.ToLower().Contains(term)
+        );
     }
 }
