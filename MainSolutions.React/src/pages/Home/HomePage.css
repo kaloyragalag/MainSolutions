@@ -1,0 +1,4 @@
+@import '../../styles/base.css';
+
+/* HomePage uses only base .ms-page-header, .ms-page-header__title,
+   .ms-page-header__subtitle — no additional styles needed yet */

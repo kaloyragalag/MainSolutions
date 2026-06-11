@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   const handleLogout = () => {
     logout();
-    setDropdownOpen(false);
-    navigate('/');
+    navigate('/login');
   };
 
   const initials = user
@@ -19,55 +18,48 @@ const Navbar: React.FC = () => {
     : '';
 
   return (
-    <nav className="navbar">
-      <div className="navbar__inner">
-        <Link to="/" className="navbar__brand">
-          <span className="navbar__brand-bracket">{`{`}</span>
-          <span className="navbar__brand-text">MS</span>
-          <span className="navbar__brand-bracket">{`}`}</span>
-        </Link>
-
-        <div className="navbar__actions">
-          {isAuthenticated && user ? (
-            <div className="navbar__user">
-              <button
-                className="navbar__avatar"
-                onClick={() => setDropdownOpen(prev => !prev)}
-                aria-label="User menu"
-                aria-expanded={dropdownOpen}
-              >
-                <span className="navbar__initials">{initials}</span>
-              </button>
-              <span className="navbar__username">
-                {user.firstName} {user.lastName}
-              </span>
-
-              {dropdownOpen && (
-                <div className="navbar__dropdown">
-                  <div className="navbar__dropdown-header">
-                    <p className="navbar__dropdown-name">{user.firstName} {user.lastName}</p>
-                    <p className="navbar__dropdown-email">{user.email}</p>
-                  </div>
-                  <button className="navbar__dropdown-item navbar__dropdown-item--danger" onClick={handleLogout}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link to="/login" className="navbar__link">Sign in</Link>
-              <Link to="/register" className="navbar__btn">Register</Link>
-            </>
-          )}
+    <header className="topbar">
+      <div className="topbar__left">
+        <div className="topbar__logo">
+          <span className="topbar__logo-bracket">{`{`}</span>
+          <span className="topbar__logo-text">MS</span>
+          <span className="topbar__logo-bracket">{`}`}</span>
         </div>
+        <span className="topbar__app-name">MainSolutions</span>
       </div>
-    </nav>
+
+      <div className="topbar__right">
+        {user && (
+          <div className="topbar__user">
+            <button
+              className="topbar__avatar"
+              onClick={() => setDropdownOpen(p => !p)}
+              aria-label="User menu"
+              aria-expanded={dropdownOpen}
+            >
+              {initials}
+            </button>
+
+            {dropdownOpen && (
+              <div className="topbar__dropdown">
+                <div className="topbar__dropdown-header">
+                  <p className="topbar__dropdown-name">{user.firstName} {user.lastName}</p>
+                  <p className="topbar__dropdown-email">{user.email}</p>
+                </div>
+                <button className="topbar__dropdown-item topbar__dropdown-item--danger" onClick={handleLogout}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </header>
   );
 };
 

@@ -1,12 +1,10 @@
-.base-page {
-  min-height: 100vh;
-  background-color: #0f1117;
-  display: flex;
-  flex-direction: column;
-}
+@import '../../styles/base.css';
 
-.base-page__main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+.base-layout { min-height: 100vh; background: var(--color-bg-app); }
+
+.base-layout__main {
+  margin-top:  var(--topbar-height);
+  margin-left: var(--sidebar-width);
+  padding:     var(--space-6);
+  min-height:  calc(100vh - var(--topbar-height));
 }

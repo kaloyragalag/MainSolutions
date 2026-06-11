@@ -1,0 +1,63 @@
+@import '../../styles/base.css';
+
+.sidebar {
+  position:   fixed;
+  top:        var(--topbar-height);
+  left:       0;
+  bottom:     0;
+  width:      var(--sidebar-width);
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  z-index:    100;
+}
+
+.sidebar__nav { padding: var(--space-3) 0; }
+
+.sidebar__item {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-3);
+  width:       100%;
+  padding:     var(--space-2) var(--space-4);
+  font-size:   var(--font-size-sm);
+  font-weight: 400;
+  font-family: var(--font-family);
+  color:       var(--color-text-primary);
+  background:  none;
+  border:      none;
+  cursor:      pointer;
+  text-align:  left;
+  text-decoration: none;
+  transition:  background var(--transition-fast);
+}
+
+.sidebar__item:hover                { background: var(--color-bg-app); color: var(--color-primary); }
+.sidebar__item--active              { background: var(--color-primary-light); color: var(--color-primary); font-weight: 500; }
+.sidebar__item--group-active        { color: var(--color-primary); }
+
+.sidebar__item-icon   { display: flex; align-items: center; color: var(--color-text-secondary); flex-shrink: 0; }
+.sidebar__item-label  { flex: 1; }
+.sidebar__item-chevron { display: flex; align-items: center; color: var(--color-text-secondary); }
+
+.sidebar__item--active .sidebar__item-icon,
+.sidebar__item--group-active .sidebar__item-icon { color: var(--color-primary); }
+
+.sidebar__children { padding: 2px 0 var(--space-1) 0; }
+
+.sidebar__child {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-2);
+  padding:     7px var(--space-4) 7px 42px;
+  font-size:   var(--font-size-sm);
+  color:       var(--color-text-secondary);
+  text-decoration: none;
+  transition:  background var(--transition-fast);
+}
+
+.sidebar__child:hover       { background: var(--color-bg-app); color: var(--color-primary); text-decoration: none; }
+.sidebar__child--active     { background: var(--color-primary-light); color: var(--color-primary); font-weight: 500; }
+
+.sidebar__child-icon        { display: flex; align-items: center; color: var(--color-text-secondary); flex-shrink: 0; }
+.sidebar__child--active .sidebar__child-icon { color: var(--color-primary); }

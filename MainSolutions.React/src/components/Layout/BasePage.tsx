@@ -1,5 +1,6 @@
 import React from 'react';
 import Navbar from './Navbar';
+import Sidebar from '../Sidebar/Sidebar';
 import './BasePage.css';
 
 interface BasePageProps {
@@ -8,9 +9,10 @@ interface BasePageProps {
 
 const BasePage: React.FC<BasePageProps> = ({ children }) => {
   return (
-    <div className="base-page">
+    <div className="base-layout">
       <Navbar />
-      <main className="base-page__main">
+      <Sidebar />
+      <main className="base-layout__main">
         {children}
       </main>
     </div>
