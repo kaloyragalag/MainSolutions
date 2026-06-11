@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import './Navbar.css';
@@ -20,12 +21,14 @@ const Navbar: React.FC = () => {
   return (
     <header className="topbar">
       <div className="topbar__left">
-        <div className="topbar__logo">
-          <span className="topbar__logo-bracket">{`{`}</span>
-          <span className="topbar__logo-text">MS</span>
-          <span className="topbar__logo-bracket">{`}`}</span>
-        </div>
-        <span className="topbar__app-name">MainSolutions</span>
+        <Link to="/" className="topbar__brand">
+          <div className="topbar__logo">
+            <span className="topbar__logo-bracket">{`{`}</span>
+            <span className="topbar__logo-text">MS</span>
+            <span className="topbar__logo-bracket">{`}`}</span>
+          </div>
+          <span className="topbar__app-name">MainSolutions</span>
+        </Link>
       </div>
 
       <div className="topbar__right">

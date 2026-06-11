@@ -1,36 +1,5 @@
 @import '../../styles/base.css';
 
-/* ── Login standalone layout ── */
-.login-layout {
-  min-height:     100vh;
-  background:     var(--color-bg-app);
-  display:        flex;
-  flex-direction: column;
-}
-
-.login-layout__topbar {
-  height:      var(--topbar-height);
-  background:  var(--color-primary);
-  display:     flex;
-  align-items: center;
-  padding:     0 var(--space-6);
-  gap:         var(--space-3);
-}
-
-.login-layout__logo           { font-size: 1.1rem; font-weight: 700; }
-.login-layout__logo-bracket   { color: rgba(255,255,255,0.6); }
-.login-layout__logo-text      { color: var(--color-text-inverse); margin: 0 2px; }
-.login-layout__app-name       { color: rgba(255,255,255,0.9); font-size: var(--font-size-md); font-weight: 500; border-left: 1px solid rgba(255,255,255,0.25); padding-left: var(--space-3); }
-
-/* ── Centered card ── */
-.login {
-  flex:            1;
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  padding:         var(--space-8) var(--space-6);
-}
-
 .login__card {
   width:         100%;
   max-width:     400px;
@@ -40,4 +9,7 @@
   padding:       var(--space-8) var(--space-6);
 }
 
-.login__header { text-align: center; margin-bottom: var(--space-6); }
+.login__header {
+  text-align:    center;
+  margin-bottom: var(--space-6);
+}

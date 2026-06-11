@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 import { LoginRequest } from '../../types/auth';
+import BasePage from '../../components/Layout/BasePage';
 import './LoginPage.css';
 
 const EyeIcon = ({ open }: { open: boolean }) => open
@@ -38,59 +39,48 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="login-layout">
-      <div className="login-layout__topbar">
-        <div className="login-layout__logo">
-          <span className="login-layout__logo-bracket">{`{`}</span>
-          <span className="login-layout__logo-text">MS</span>
-          <span className="login-layout__logo-bracket">{`}`}</span>
+    <BasePage showSidebar={false}>
+      <div className="login__card">
+        <div className="login__header">
+          <h1 className="ms-h2">Log in to your account</h1>
+          <p className="ms-text-secondary" style={{ marginTop: 4 }}>Enter your credentials to continue</p>
         </div>
-        <span className="login-layout__app-name">MainSolutions</span>
-      </div>
 
-      <div className="login">
-        <div className="login__card">
-          <div className="login__header">
-            <h1 className="ms-h2">Log in to your account</h1>
-            <p className="ms-text-secondary" style={{ marginTop: 4 }}>Enter your credentials to continue</p>
+        <form className="ms-form" onSubmit={handleSubmit} noValidate>
+          {error && (
+            <div className="ms-alert ms-alert--danger" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" className="ms-field__input" placeholder="you@example.com" value={form.email} onChange={handleChange} autoComplete="email" required />
           </div>
 
-          <form className="ms-form" onSubmit={handleSubmit} noValidate>
-            {error && (
-              <div className="ms-alert ms-alert--danger" role="alert">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {error}
-              </div>
-            )}
-
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" className="ms-field__input" placeholder="you@example.com" value={form.email} onChange={handleChange} autoComplete="email" required />
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="password">Password</label>
+            <div className="ms-field__input-wrapper">
+              <input id="password" name="password" type={showPassword ? 'text' : 'password'} className="ms-field__input ms-field__input--password" placeholder="••••••••" value={form.password} onChange={handleChange} autoComplete="current-password" required />
+              <button type="button" className="ms-field__toggle" onClick={() => setShowPassword(p => !p)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                <EyeIcon open={showPassword} />
+              </button>
             </div>
+          </div>
 
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="password">Password</label>
-              <div className="ms-field__input-wrapper">
-                <input id="password" name="password" type={showPassword ? 'text' : 'password'} className="ms-field__input ms-field__input--password" placeholder="••••••••" value={form.password} onChange={handleChange} autoComplete="current-password" required />
-                <button type="button" className="ms-field__toggle" onClick={() => setShowPassword(p => !p)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                  <EyeIcon open={showPassword} />
-                </button>
-              </div>
-            </div>
+          <button type="submit" className={`ms-btn ms-btn--primary ms-btn--full${loading ? ' ms-btn--loading' : ''}`} disabled={loading}>
+            {loading ? <><span className="ms-btn__spinner" aria-hidden="true" />Logging in...</> : 'Log in'}
+          </button>
+        </form>
 
-            <button type="submit" className={`ms-btn ms-btn--primary ms-btn--full${loading ? ' ms-btn--loading' : ''}`} disabled={loading}>
-              {loading ? <><span className="ms-btn__spinner" aria-hidden="true" />Logging in...</> : 'Log in'}
-            </button>
-          </form>
-
-          <p className="ms-footer-link">
-            Don't have an account? <Link to="/register">Register</Link>
-          </p>
-        </div>
+        <p className="ms-footer-link">
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
       </div>
-    </div>
+    </BasePage>
   );
 };
 

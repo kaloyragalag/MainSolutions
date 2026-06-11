@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/authService';
 import { RegisterRequest } from '../../types/auth';
+import BasePage from '../../components/Layout/BasePage';
 import './RegisterPage.css';
 
 const EyeIcon = ({ open }: { open: boolean }) => open
@@ -40,75 +41,64 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="register-layout">
-      <div className="register-layout__topbar">
-        <div className="register-layout__logo">
-          <span className="register-layout__logo-bracket">{`{`}</span>
-          <span className="register-layout__logo-text">MS</span>
-          <span className="register-layout__logo-bracket">{`}`}</span>
+    <BasePage showSidebar={false}>
+      <div className="register__card">
+        <div className="register__header">
+          <h1 className="ms-h2">Create your account</h1>
+          <p className="ms-text-secondary" style={{ marginTop: 4 }}>Get started with MainSolutions</p>
         </div>
-        <span className="register-layout__app-name">MainSolutions</span>
-      </div>
 
-      <div className="register">
-        <div className="register__card">
-          <div className="register__header">
-            <h1 className="ms-h2">Create your account</h1>
-            <p className="ms-text-secondary" style={{ marginTop: 4 }}>Get started with MainSolutions</p>
+        <form className="ms-form" onSubmit={handleSubmit} noValidate>
+          {error && (
+            <div className="ms-alert ms-alert--danger" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
+
+          <div className="ms-row">
+            <div className="ms-field">
+              <label className="ms-field__label" htmlFor="firstName">First name</label>
+              <input id="firstName" name="firstName" type="text" className="ms-field__input" placeholder="John" value={form.firstName} onChange={handleChange} required />
+            </div>
+            <div className="ms-field">
+              <label className="ms-field__label" htmlFor="lastName">Last name</label>
+              <input id="lastName" name="lastName" type="text" className="ms-field__input" placeholder="Doe" value={form.lastName} onChange={handleChange} required />
+            </div>
           </div>
 
-          <form className="ms-form" onSubmit={handleSubmit} noValidate>
-            {error && (
-              <div className="ms-alert ms-alert--danger" role="alert">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {error}
-              </div>
-            )}
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" className="ms-field__input" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
+          </div>
 
-            <div className="ms-row">
-              <div className="ms-field">
-                <label className="ms-field__label" htmlFor="firstName">First name</label>
-                <input id="firstName" name="firstName" type="text" className="ms-field__input" placeholder="John" value={form.firstName} onChange={handleChange} required />
-              </div>
-              <div className="ms-field">
-                <label className="ms-field__label" htmlFor="lastName">Last name</label>
-                <input id="lastName" name="lastName" type="text" className="ms-field__input" placeholder="Doe" value={form.lastName} onChange={handleChange} required />
-              </div>
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="password">Password</label>
+            <div className="ms-field__input-wrapper">
+              <input id="password" name="password" type={showPassword ? 'text' : 'password'} className="ms-field__input ms-field__input--password" placeholder="Min. 6 characters" value={form.password} onChange={handleChange} required />
+              <button type="button" className="ms-field__toggle" onClick={() => setShowPassword(p => !p)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                <EyeIcon open={showPassword} />
+              </button>
             </div>
+          </div>
 
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="email">Email</label>
-              <input id="email" name="email" type="email" className="ms-field__input" placeholder="you@example.com" value={form.email} onChange={handleChange} required />
-            </div>
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" name="confirmPassword" type={showPassword ? 'text' : 'password'} className="ms-field__input" placeholder="Re-enter password" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError(''); }} required />
+          </div>
 
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="password">Password</label>
-              <div className="ms-field__input-wrapper">
-                <input id="password" name="password" type={showPassword ? 'text' : 'password'} className="ms-field__input ms-field__input--password" placeholder="Min. 6 characters" value={form.password} onChange={handleChange} required />
-                <button type="button" className="ms-field__toggle" onClick={() => setShowPassword(p => !p)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                  <EyeIcon open={showPassword} />
-                </button>
-              </div>
-            </div>
+          <button type="submit" className={`ms-btn ms-btn--primary ms-btn--full${loading ? ' ms-btn--loading' : ''}`} disabled={loading}>
+            {loading ? <><span className="ms-btn__spinner" aria-hidden="true" />Creating account...</> : 'Create account'}
+          </button>
+        </form>
 
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="confirmPassword">Confirm password</label>
-              <input id="confirmPassword" name="confirmPassword" type={showPassword ? 'text' : 'password'} className="ms-field__input" placeholder="Re-enter password" value={confirmPassword} onChange={e => { setConfirmPassword(e.target.value); setError(''); }} required />
-            </div>
-
-            <button type="submit" className={`ms-btn ms-btn--primary ms-btn--full${loading ? ' ms-btn--loading' : ''}`} disabled={loading}>
-              {loading ? <><span className="ms-btn__spinner" aria-hidden="true" />Creating account...</> : 'Create account'}
-            </button>
-          </form>
-
-          <p className="ms-footer-link">
-            Already have an account? <Link to="/login">Log in</Link>
-          </p>
-        </div>
+        <p className="ms-footer-link">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
       </div>
-    </div>
+    </BasePage>
   );
 };
 

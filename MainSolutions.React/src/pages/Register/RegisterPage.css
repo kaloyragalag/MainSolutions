@@ -1,36 +1,5 @@
 @import '../../styles/base.css';
 
-/* ── Register standalone layout ── */
-.register-layout {
-  min-height:     100vh;
-  background:     var(--color-bg-app);
-  display:        flex;
-  flex-direction: column;
-}
-
-.register-layout__topbar {
-  height:      var(--topbar-height);
-  background:  var(--color-primary);
-  display:     flex;
-  align-items: center;
-  padding:     0 var(--space-6);
-  gap:         var(--space-3);
-}
-
-.register-layout__logo           { font-size: 1.1rem; font-weight: 700; }
-.register-layout__logo-bracket   { color: rgba(255,255,255,0.6); }
-.register-layout__logo-text      { color: var(--color-text-inverse); margin: 0 2px; }
-.register-layout__app-name       { color: rgba(255,255,255,0.9); font-size: var(--font-size-md); font-weight: 500; border-left: 1px solid rgba(255,255,255,0.25); padding-left: var(--space-3); }
-
-/* ── Centered card ── */
-.register {
-  flex:            1;
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  padding:         var(--space-8) var(--space-6);
-}
-
 .register__card {
   width:         100%;
   max-width:     440px;
@@ -40,4 +9,7 @@
   padding:       var(--space-8) var(--space-6);
 }
 
-.register__header { text-align: center; margin-bottom: var(--space-6); }
+.register__header {
+  text-align:    center;
+  margin-bottom: var(--space-6);
+}

@@ -94,3 +94,15 @@
 .topbar__dropdown-item:hover               { background: var(--color-bg-app); }
 .topbar__dropdown-item--danger             { color: var(--color-danger); }
 .topbar__dropdown-item--danger:hover       { background: var(--color-danger-bg); }
+
+.topbar__brand {
+  display:     flex;
+  align-items: center;
+  gap:         var(--space-3);
+  text-decoration: none;
+}
+
+.topbar__brand:hover {
+  text-decoration: none;
+  opacity: 0.85;
+}
