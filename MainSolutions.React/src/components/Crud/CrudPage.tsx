@@ -14,6 +14,8 @@ export interface CrudField<TForm> {
   placeholder?: string;
   required?: boolean;
   type?: "text" | "textarea" | "select" | "number" | "decimal" | "date";
+  /** Options for select fields */
+  options?: { value: string | number; label: string }[];
 }
 
 export interface CrudDetailRow<T> {
@@ -255,8 +257,8 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
 
   const filteredItems = Array.isArray(items)
     ? items.filter((item) =>
-        getItemTitle(item).toLowerCase().includes(search.toLowerCase()),
-      )
+      getItemTitle(item).toLowerCase().includes(search.toLowerCase()),
+    )
     : [];
 
   const selectedItem = items.find((i) => i.id === selectedId) ?? null;
@@ -555,6 +557,11 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                             <option value="" disabled>
                               {field.placeholder || "Select an option"}
                             </option>
+                            {field.options?.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
                           </select>
                         );
                       }
@@ -589,7 +596,7 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                             placeholder={field.placeholder}
                             autoFocus={index === 0}
                           />
-                        ); 
+                        );
                       }
 
                       if (field.type === "date") {
