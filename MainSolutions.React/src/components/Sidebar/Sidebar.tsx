@@ -58,8 +58,8 @@ const navItems: NavItem[] = [
     label: 'Configuration',
     icon: <ConfigIcon />,
     children: [
-      { label: 'Categories', path: '/configuration/categories' },
-      { label: 'Products', path: '/configuration/products' },
+      { label: 'Categories', path: '/categories' },
+      { label: 'Products', path: '/products' },
     ],
   },
 ];
