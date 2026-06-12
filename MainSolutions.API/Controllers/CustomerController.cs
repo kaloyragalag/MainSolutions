@@ -5,6 +5,8 @@ using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+namespace MainSolutions.API.Controllers;
+
 [Authorize]
 public class CustomerController : BaseController<Customer>
 {
@@ -50,4 +52,6 @@ public class CustomerController : BaseController<Customer>
         var updated = await _customerRepository.GetByIdAsync(id);
         return Ok(updated);
     }
+
+    protected override object GetEntityId(Customer entity) => entity.Id;
 }
