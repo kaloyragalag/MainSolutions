@@ -23,8 +23,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
         var term = search.ToLower();
         return query.Where(u =>
-            u.FirstName.ToLower().Contains(term) ||
-            u.LastName.ToLower().Contains(term) ||
+            u.Username.ToLower().Contains(term) ||
             u.Email.ToLower().Contains(term)
         );
     }

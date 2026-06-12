@@ -41,10 +41,6 @@ public class CategoriesController : BaseController<Category>
             }
         }
 
-        fields["updatedAt"] = DateTime.UtcNow.ToString("o");
-        fields.Remove("createdAt");
-        fields.Remove("id");
-
         return await base.Update(id, fields);
     }
 

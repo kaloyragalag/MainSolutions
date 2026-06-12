@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
 
@@ -23,8 +24,18 @@ public class AppDbContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.Email).IsRequired().HasMaxLength(256);
             entity.Property(u => u.PasswordHash).IsRequired();
-            entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.Username).IsRequired().HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(c => c.LastName).IsRequired().HasMaxLength(100);
+            entity.HasOne(c => c.User)
+                  .WithOne(u => u.Customer)
+                  .HasForeignKey<Customer>(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Category>(entity =>

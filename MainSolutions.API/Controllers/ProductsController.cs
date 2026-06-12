@@ -52,10 +52,6 @@ public class ProductsController : BaseController<Product>
             }
         }
 
-        fields["updatedAt"] = DateTime.UtcNow.ToString("o");
-        fields.Remove("createdAt");
-        fields.Remove("id");
-
         await base.Update(id, fields);
 
         var updated = await _productRepository.GetByIdWithCategoryAsync(id);

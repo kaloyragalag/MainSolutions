@@ -54,6 +54,10 @@ public abstract class BaseController<T> : ControllerBase where T : class
         var existing = await _service.GetByIdAsync(id);
         if (existing is null) return NotFound(new { message = $"Record with id {id} was not found." });
 
+        fields["updatedAt"] = DateTime.UtcNow.ToString("o");
+        fields.Remove("createdAt");
+        fields.Remove("id");
+
         ApplyFields(existing, fields);
         await _service.UpdateAsync(existing);
         return Ok(existing);

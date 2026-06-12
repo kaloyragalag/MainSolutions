@@ -46,8 +46,7 @@ public class AuthService : IAuthService
         {
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            FirstName = request.FirstName,
-            LastName = request.LastName,
+            Username = request.Username,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         };
@@ -66,8 +65,7 @@ public class AuthService : IAuthService
         {
             Token = token,
             Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
+            Username = user.Username,
             ExpiresAt = expiresAt
         };
     }
@@ -84,8 +82,7 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.GivenName, user.FirstName),
-            new Claim(JwtRegisteredClaimNames.FamilyName, user.LastName),
+            new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

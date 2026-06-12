@@ -21,17 +21,55 @@ public static class DbSeeder
             {
                 Email = "admin@mainsolutions.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                FirstName = "Admin",
-                LastName = "User",
+                Username = "admin.admin",
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             });
             await context.SaveChangesAsync();
             Console.WriteLine("Seed: Admin user created.");
         }
-        else
+        if (!await context.Users.AnyAsync(u => u.Email == "user@mainsolutions.com"))
         {
-            Console.WriteLine("Seed: Admin user already exists, skipping.");
+            context.Users.Add(new User
+            {
+                Email = "user@mainsolutions.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("User@123"),
+                Username = "user.user",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
+            });
+            await context.SaveChangesAsync();
+            Console.WriteLine("Seed: Regular user created.");
+        }
+    }
+
+    private static async Task SeedCustomersAsync(AppDbContext context)
+    {
+        if (!await context.Customers.AnyAsync(c => c.User.Email == "admin@mainsolutions.com"))
+        {
+            var adminUser = await context.Users.FirstAsync(u => u.Email == "admin@mainsolutions.com");
+            context.Customers.Add(new Customer
+            {
+                UserId = adminUser.Id,
+                FirstName = "Admin",
+                LastName = "User",
+                CreatedAt = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+            Console.WriteLine("Seed: Admin customer profile created.");
+        }
+        if (!await context.Customers.AnyAsync(c => c.User.Email == "user@mainsolutions.com"))
+        {
+            var regularUser = await context.Users.FirstAsync(u => u.Email == "user@mainsolutions.com");
+            context.Customers.Add(new Customer
+            {
+                UserId = regularUser.Id,
+                FirstName = "Regular",
+                LastName = "User",
+                CreatedAt = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+            Console.WriteLine("Seed: Regular customer profile created.");
         }
     }
 
@@ -60,14 +98,14 @@ public static class DbSeeder
         await context.Categories.AddRangeAsync(categories);
         await context.SaveChangesAsync();
 
-        var laptops     = categories[0];
-        var phones      = categories[1];
+        var laptops = categories[0];
+        var phones = categories[1];
         var peripherals = categories[2];
-        var monitors    = categories[3];
-        var networking  = categories[4];
-        var storage     = categories[5];
-        var audio       = categories[6];
-        var components  = categories[7];
+        var monitors = categories[3];
+        var networking = categories[4];
+        var storage = categories[5];
+        var audio = categories[6];
+        var components = categories[7];
 
         var products = new List<Product>
         {

@@ -35,8 +35,6 @@ public class UsersController : BaseController<User>
 
         // Protect sensitive fields from being updated via this endpoint
         fields.Remove("passwordHash");
-        fields.Remove("createdAt");
-        fields.Remove("id");
 
         return await base.Update(id, fields);
     }
