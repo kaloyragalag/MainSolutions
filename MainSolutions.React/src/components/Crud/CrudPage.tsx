@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import BasePage from '../Layout/BasePage';
-import { CrudService } from '../../types/crud';
-import './CrudPage.css';
+import React, { useEffect, useState } from "react";
+import BasePage from "../Layout/BasePage";
+import { CrudService } from "../../types/crud";
+import "./CrudPage.css";
 
 interface EntityBase {
   id: number;
@@ -13,7 +13,7 @@ export interface CrudField<TForm> {
   label: string;
   placeholder?: string;
   required?: boolean;
-  type?: 'text' | 'textarea';
+  type?: "text" | "textarea" | "select" | "number" | "decimal" | "date";
 }
 
 export interface CrudDetailRow<T> {
@@ -22,7 +22,10 @@ export interface CrudDetailRow<T> {
   render: (item: T) => React.ReactNode;
 }
 
-export interface CrudPageProps<T extends EntityBase, TForm extends Record<string, any>> {
+export interface CrudPageProps<
+  T extends EntityBase,
+  TForm extends Record<string, any>,
+> {
   /** Page title, e.g. "Categories" */
   title: string;
   /** Page subtitle shown under the title */
@@ -52,34 +55,79 @@ export interface CrudPageProps<T extends EntityBase, TForm extends Record<string
 }
 
 const DefaultIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
   </svg>
 );
 
 const DefaultIconLg = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
   </svg>
 );
 
 const PlusIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
 const EditIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
     <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
 const TrashIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
     <polyline points="3 6 5 6 21 6" />
     <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
     <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
@@ -87,25 +135,51 @@ const TrashIcon = () => (
 );
 
 const EmptyIcon = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-    <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+  <svg
+    width="40"
+    height="40"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    aria-hidden="true"
+  >
+    <rect x="3" y="3" width="7" height="7" />
+    <rect x="14" y="3" width="7" height="7" />
+    <rect x="14" y="14" width="7" height="7" />
+    <rect x="3" y="14" width="7" height="7" />
   </svg>
 );
 
 const ChevronLeftIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
     <polyline points="15 18 9 12 15 6" />
   </svg>
 );
 
 const ChevronRightIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    aria-hidden="true"
+  >
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
 
-type ModalMode = 'create' | 'edit' | null;
+type ModalMode = "create" | "edit" | null;
 
 function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   title,
@@ -127,7 +201,7 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -154,12 +228,16 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
       setTotalPages(Math.max(result.totalPages, 1));
       setTotalCount(result.totalCount);
       if (list.length > 0) {
-        setSelectedId(prev => (prev && list.some(i => i.id === prev) ? prev : list[0].id));
+        setSelectedId((prev) =>
+          prev && list.some((i) => i.id === prev) ? prev : list[0].id,
+        );
       } else {
         setSelectedId(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to load ${pluralName}.`);
+      setError(
+        err instanceof Error ? err.message : `Failed to load ${pluralName}.`,
+      );
     } finally {
       setLoading(false);
     }
@@ -176,15 +254,17 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   };
 
   const filteredItems = Array.isArray(items)
-    ? items.filter(item => getItemTitle(item).toLowerCase().includes(search.toLowerCase()))
+    ? items.filter((item) =>
+        getItemTitle(item).toLowerCase().includes(search.toLowerCase()),
+      )
     : [];
 
-  const selectedItem = items.find(i => i.id === selectedId) ?? null;
+  const selectedItem = items.find((i) => i.id === selectedId) ?? null;
 
   const buildFormData = (item: T): TForm => {
     if (toFormData) return toFormData(item);
     const data: Record<string, any> = {};
-    formFields.forEach(field => {
+    formFields.forEach((field) => {
       data[field.key as string] = (item as any)[field.key];
     });
     return data as TForm;
@@ -193,13 +273,13 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   const openCreateModal = () => {
     setFormData(emptyFormData);
     setFormError(null);
-    setModalMode('create');
+    setModalMode("create");
   };
 
   const openEditModal = (item: T) => {
     setFormData(buildFormData(item));
     setFormError(null);
-    setModalMode('edit');
+    setModalMode("edit");
   };
 
   const closeModal = () => {
@@ -210,14 +290,14 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   };
 
   const handleFieldChange = (key: keyof TForm, value: string) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missingRequired = formFields.find(
-      f => f.required && !String(formData[f.key] ?? '').trim()
+      (f) => f.required && !String(formData[f.key] ?? "").trim(),
     );
     if (missingRequired) {
       setFormError(`${missingRequired.label} is required.`);
@@ -227,18 +307,20 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
     setSaving(true);
     setFormError(null);
     try {
-      if (modalMode === 'create') {
+      if (modalMode === "create") {
         const created = await service.create(formData);
         await fetchItems(page);
         setSelectedId(created.id);
-      } else if (modalMode === 'edit' && selectedItem) {
+      } else if (modalMode === "edit" && selectedItem) {
         await service.update(selectedItem.id, formData);
         await fetchItems(page);
       }
       setModalMode(null);
       setFormData(emptyFormData);
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : `Failed to save ${entityName}.`);
+      setFormError(
+        err instanceof Error ? err.message : `Failed to save ${entityName}.`,
+      );
     } finally {
       setSaving(false);
     }
@@ -254,7 +336,9 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
       const isLastItemOnPage = items.length === 1 && page > 1;
       await fetchItems(isLastItemOnPage ? page - 1 : page);
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Failed to delete ${entityName}.`);
+      setError(
+        err instanceof Error ? err.message : `Failed to delete ${entityName}.`,
+      );
       setDeleteTarget(null);
     } finally {
       setDeleting(false);
@@ -263,8 +347,10 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
 
   const listIcon = icon ?? <DefaultIcon />;
   const detailIcon = icon ?? <DefaultIconLg />;
-  const capitalizedEntity = entityName.charAt(0).toUpperCase() + entityName.slice(1);
-  const capitalizedPlural = pluralName.charAt(0).toUpperCase() + pluralName.slice(1);
+  const capitalizedEntity =
+    entityName.charAt(0).toUpperCase() + entityName.slice(1);
+  const capitalizedPlural =
+    pluralName.charAt(0).toUpperCase() + pluralName.slice(1);
 
   return (
     <BasePage>
@@ -280,7 +366,10 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
       </div>
 
       {error && (
-        <div className="ms-alert ms-alert--danger" style={{ marginBottom: 'var(--space-4)' }}>
+        <div
+          className="ms-alert ms-alert--danger"
+          style={{ marginBottom: "var(--space-4)" }}
+        >
           {error}
         </div>
       )}
@@ -289,14 +378,16 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
         {/* List panel */}
         <div className="crud-list">
           <div className="crud-list__header">
-            <span className="ms-h4">All {pluralName} ({totalCount})</span>
+            <span className="ms-h4">
+              All {pluralName} ({totalCount})
+            </span>
           </div>
           <div className="crud-list__search">
             <input
               className="ms-field__input"
               placeholder={`Search ${pluralName}...`}
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="crud-list__items">
@@ -305,17 +396,21 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
             ) : filteredItems.length === 0 ? (
               <div className="crud-list__empty">No {pluralName} found.</div>
             ) : (
-              filteredItems.map(item => (
+              filteredItems.map((item) => (
                 <button
                   key={item.id}
-                  className={`crud-list__item ${selectedId === item.id ? 'crud-list__item--active' : ''}`}
+                  className={`crud-list__item ${selectedId === item.id ? "crud-list__item--active" : ""}`}
                   onClick={() => setSelectedId(item.id)}
                 >
                   <span className="crud-list__item-icon">{listIcon}</span>
                   <span className="crud-list__item-text">
-                    <span className="crud-list__item-name">{getItemTitle(item)}</span>
+                    <span className="crud-list__item-name">
+                      {getItemTitle(item)}
+                    </span>
                     {getItemSubtitle && (
-                      <span className="crud-list__item-desc">{getItemSubtitle(item)}</span>
+                      <span className="crud-list__item-desc">
+                        {getItemSubtitle(item)}
+                      </span>
                     )}
                   </span>
                 </button>
@@ -361,24 +456,38 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
               </div>
 
               <div className="crud-detail__actions">
-                <button className="ms-btn ms-btn--secondary" onClick={() => openEditModal(selectedItem)}>
+                <button
+                  className="ms-btn ms-btn--secondary"
+                  onClick={() => openEditModal(selectedItem)}
+                >
                   <EditIcon />
                   Edit
                 </button>
-                <button className="ms-btn ms-btn--danger" onClick={() => setDeleteTarget(selectedItem)}>
+                <button
+                  className="ms-btn ms-btn--danger"
+                  onClick={() => setDeleteTarget(selectedItem)}
+                >
                   <TrashIcon />
                   Delete
                 </button>
               </div>
 
               <div className="crud-detail__section">
-                <h3 className="ms-h3" style={{ marginBottom: 'var(--space-2)' }}>Details</h3>
-                {detailRows.map(row => {
+                <h3
+                  className="ms-h3"
+                  style={{ marginBottom: "var(--space-2)" }}
+                >
+                  Details
+                </h3>
+                {detailRows.map((row) => {
                   const value = row.render(selectedItem);
-                  if (value === null || value === undefined || value === '') return null;
+                  if (value === null || value === undefined || value === "")
+                    return null;
                   return (
                     <div className="crud-detail__row" key={row.label}>
-                      <span className="crud-detail__row-label">{row.label}</span>
+                      <span className="crud-detail__row-label">
+                        {row.label}
+                      </span>
                       <span className="crud-detail__row-value">{value}</span>
                     </div>
                   );
@@ -390,11 +499,14 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
               <EmptyIcon />
               <p>
                 {loading
-                  ? 'Loading...'
+                  ? "Loading..."
                   : `Select a ${entityName} to view details, or create a new one.`}
               </p>
               {!loading && (
-                <button className="ms-btn ms-btn--primary" onClick={openCreateModal}>
+                <button
+                  className="ms-btn ms-btn--primary"
+                  onClick={openCreateModal}
+                >
                   <PlusIcon />
                   Create {entityName}
                 </button>
@@ -407,50 +519,144 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
       {/* Create / Edit modal */}
       {modalMode && (
         <div className="crud-modal-overlay" onClick={closeModal}>
-          <div className="crud-modal" onClick={e => e.stopPropagation()}>
+          <div className="crud-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="ms-h2 crud-modal__title">
-              {modalMode === 'create' ? `Create ${entityName}` : `Edit ${entityName}`}
+              {modalMode === "create"
+                ? `Create ${entityName}`
+                : `Edit ${entityName}`}
             </h2>
 
             <form className="ms-form" onSubmit={handleSubmit}>
-              {formError && <div className="ms-alert ms-alert--danger">{formError}</div>}
+              {formError && (
+                <div className="ms-alert ms-alert--danger">{formError}</div>
+              )}
 
               {formFields.map((field, index) => {
                 const fieldId = `crud-field-${field.key as string}`;
-                const value = (formData[field.key] ?? '') as string;
+                const value = (formData[field.key] ?? "") as string;
                 return (
                   <div className="ms-field" key={field.key as string}>
-                    <label className="ms-field__label" htmlFor={fieldId}>{field.label}</label>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        id={fieldId}
-                        className="ms-field__input crud-field__textarea"
-                        value={value}
-                        onChange={e => handleFieldChange(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        autoFocus={index === 0}
-                      />
-                    ) : (
-                      <input
-                        id={fieldId}
-                        className="ms-field__input"
-                        value={value}
-                        onChange={e => handleFieldChange(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        autoFocus={index === 0}
-                      />
-                    )}
+                    <label className="ms-field__label" htmlFor={fieldId}>
+                      {field.label}
+                    </label>
+
+                    {(() => {
+                      if (field.type === "select") {
+                        return (
+                          <select
+                            id={fieldId}
+                            className="ms-field__input"
+                            value={value}
+                            onChange={(e) =>
+                              handleFieldChange(field.key, e.target.value)
+                            }
+                            autoFocus={index === 0}
+                          >
+                            <option value="" disabled>
+                              {field.placeholder || "Select an option"}
+                            </option>
+                          </select>
+                        );
+                      }
+
+                      if (field.type === "number") {
+                        return (
+                          <input
+                            id={fieldId}
+                            className="ms-field__input"
+                            type="number"
+                            value={value}
+                            onChange={(e) =>
+                              handleFieldChange(field.key, e.target.value)
+                            }
+                            placeholder={field.placeholder}
+                            autoFocus={index === 0}
+                          />
+                        );
+                      }
+
+                      if (field.type === "decimal") {
+                        return (
+                          <input
+                            id={fieldId}
+                            className="ms-field__input"
+                            type="number"
+                            step="0.01"
+                            value={value}
+                            onChange={(e) =>
+                              handleFieldChange(field.key, e.target.value)
+                            }
+                            placeholder={field.placeholder}
+                            autoFocus={index === 0}
+                          />
+                        ); 
+                      }
+
+                      if (field.type === "date") {
+                        return (
+                          <input
+                            id={fieldId}
+                            className="ms-field__input"
+                            type="date"
+                            value={value}
+                            onChange={(e) =>
+                              handleFieldChange(field.key, e.target.value)
+                            }
+                            placeholder={field.placeholder}
+                            autoFocus={index === 0}
+                          />
+                        );
+                      }
+
+                      if (field.type === "textarea") {
+                        return (
+                          <textarea
+                            id={fieldId}
+                            className="ms-field__input crud-field__textarea"
+                            value={value}
+                            onChange={(e) =>
+                              handleFieldChange(field.key, e.target.value)
+                            }
+                            placeholder={field.placeholder}
+                            autoFocus={index === 0}
+                          />
+                        );
+                      }
+
+                      return (
+                        <input
+                          id={fieldId}
+                          className="ms-field__input"
+                          type="text"
+                          value={value}
+                          onChange={(e) =>
+                            handleFieldChange(field.key, e.target.value)
+                          }
+                          placeholder={field.placeholder}
+                          autoFocus={index === 0}
+                        />
+                      );
+                    })()}
                   </div>
                 );
               })}
 
               <div className="crud-modal__actions">
-                <button type="button" className="ms-btn ms-btn--secondary" onClick={closeModal} disabled={saving}>
+                <button
+                  type="button"
+                  className="ms-btn ms-btn--secondary"
+                  onClick={closeModal}
+                  disabled={saving}
+                >
                   Cancel
                 </button>
-                <button type="submit" className={`ms-btn ms-btn--primary ${saving ? 'ms-btn--loading' : ''}`} disabled={saving}>
+                <button
+                  type="submit"
+                  className={`ms-btn ms-btn--primary ${saving ? "ms-btn--loading" : ""}`}
+                  disabled={saving}
+                >
                   {saving && <span className="ms-btn__spinner" />}
-                  {modalMode === 'create' ? 'Create' : 'Save changes'}
+                  {modalMode === "create" ? "Create" : "Save changes"}
                 </button>
               </div>
             </form>
@@ -460,12 +666,16 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
-        <div className="crud-modal-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
-          <div className="crud-modal" onClick={e => e.stopPropagation()}>
+        <div
+          className="crud-modal-overlay"
+          onClick={() => !deleting && setDeleteTarget(null)}
+        >
+          <div className="crud-modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="ms-h2 crud-modal__title">Delete {entityName}</h2>
             <p>
-              Are you sure you want to delete <strong>{getItemTitle(deleteTarget)}</strong>? This
-              action cannot be undone.
+              Are you sure you want to delete{" "}
+              <strong>{getItemTitle(deleteTarget)}</strong>? This action cannot
+              be undone.
             </p>
             <div className="crud-modal__actions">
               <button
@@ -476,7 +686,7 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                 Cancel
               </button>
               <button
-                className={`ms-btn ms-btn--danger ${deleting ? 'ms-btn--loading' : ''}`}
+                className={`ms-btn ms-btn--danger ${deleting ? "ms-btn--loading" : ""}`}
                 onClick={confirmDelete}
                 disabled={deleting}
               >

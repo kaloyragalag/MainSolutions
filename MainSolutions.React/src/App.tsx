@@ -5,6 +5,7 @@ import LoginPage from './pages/Login/LoginPage';
 import RegisterPage from './pages/Register/RegisterPage';
 import HomePage from './pages/Home/HomePage';
 import CategoryPage from './pages/Category/CategoryPage';
+import ProductPage from './pages/Product/ProductPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -22,7 +23,7 @@ const AppRoutes: React.FC = () => (
     <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
     <Route path="/"         element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
     <Route path="/categories" element={<ProtectedRoute><CategoryPage /></ProtectedRoute>} />
-    <Route path="/products"   element={<ProtectedRoute><div style={{ padding: 24 }}>Products — coming soon</div></ProtectedRoute>} />
+    <Route path="/products"   element={<ProtectedRoute><ProductPage /></ProtectedRoute>} />
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
 );
