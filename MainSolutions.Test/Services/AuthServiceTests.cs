@@ -120,13 +120,12 @@ public class AuthServiceTests
         {
             Email = "new@example.com",
             Password = "password123",
-            FirstName = "Jane",
-            LastName = "Doe"
+            Username = "jane_doe"
         });
 
         result.Should().NotBeNull();
         result.Email.Should().Be("new@example.com");
-        result.FirstName.Should().Be("Jane");
+        result.Username.Should().Be("jane_doe");
         result.Token.Should().NotBeNullOrEmpty();
     }
 
@@ -139,8 +138,7 @@ public class AuthServiceTests
         {
             Email = "existing@example.com",
             Password = "password123",
-            FirstName = "Jane",
-            LastName = "Doe"
+            Username = "jane_doe"
         });
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -157,8 +155,7 @@ public class AuthServiceTests
         {
             Email = "new@example.com",
             Password = "plaintext",
-            FirstName = "Jane",
-            LastName = "Doe"
+            Username = "jane_doe"
         });
 
         _userRepoMock.Verify(r => r.CreateAsync(
@@ -175,8 +172,7 @@ public class AuthServiceTests
         Id = 1,
         Email = email,
         PasswordHash = BCrypt.Net.BCrypt.HashPassword(plainPassword),
-        FirstName = "John",
-        LastName = "Doe",
+        Username = "john_doe",
         IsActive = true,
         CreatedAt = DateTime.UtcNow
     };

@@ -144,11 +144,11 @@ public class UserRepositoryTests : IDisposable
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
 
-        user.FirstName = "Updated";
+        user.Username = "updated_user";
         await _repository.UpdateAsync(user);
 
         var updated = await _context.Users.FindAsync(user.Id);
-        updated!.FirstName.Should().Be("Updated");
+        updated!.Username.Should().Be("updated_user");
     }
 
     #endregion
@@ -223,8 +223,7 @@ public class UserRepositoryTests : IDisposable
     {
         Email = email,
         PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-        FirstName = "John",
-        LastName = "Doe",
+        Username = "john_doe",
         IsActive = true,
         CreatedAt = DateTime.UtcNow
     };

@@ -176,8 +176,7 @@ public class UsersControllerTests
         Id = id,
         Email = email,
         PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
-        FirstName = "John",
-        LastName = "Doe",
+        Username = "john_doe",
         IsActive = true,
         CreatedAt = DateTime.UtcNow
     };

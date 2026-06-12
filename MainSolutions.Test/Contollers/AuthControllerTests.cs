@@ -26,8 +26,7 @@ public class AuthControllerTests
         {
             Token = "jwt-token",
             Email = "john@example.com",
-            FirstName = "John",
-            LastName = "Doe",
+            Username = "john_doe",
             ExpiresAt = DateTime.UtcNow.AddHours(8)
         };
         _authServiceMock.Setup(s => s.LoginAsync(It.IsAny<LoginRequest>())).ReturnsAsync(response);
@@ -70,8 +69,7 @@ public class AuthControllerTests
         {
             Token = "jwt-token",
             Email = "new@example.com",
-            FirstName = "Jane",
-            LastName = "Doe",
+            Username = "jane_doe",
             ExpiresAt = DateTime.UtcNow.AddHours(8)
         };
         _authServiceMock.Setup(s => s.RegisterAsync(It.IsAny<RegisterRequest>())).ReturnsAsync(response);
@@ -80,8 +78,7 @@ public class AuthControllerTests
         {
             Email = "new@example.com",
             Password = "password123",
-            FirstName = "Jane",
-            LastName = "Doe"
+            Username = "jane_doe"
         });
 
         var created = result.Should().BeOfType<CreatedAtActionResult>().Subject;
@@ -98,8 +95,7 @@ public class AuthControllerTests
         {
             Email = "existing@example.com",
             Password = "password123",
-            FirstName = "Jane",
-            LastName = "Doe"
+            Username = "jane_doe"
         });
 
         var conflict = result.Should().BeOfType<ConflictObjectResult>().Subject;
