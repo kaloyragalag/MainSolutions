@@ -10,7 +10,7 @@ const HomePage: React.FC = () => {
     <BasePage>
       <div className="ms-page-header">
         <div className="ms-page-header__info">
-          <h1 className="ms-page-header__title">Welcome back, {user?.firstName}</h1>
+          <h1 className="ms-page-header__title">Welcome back, {user?.username}</h1>
           <p className="ms-page-header__subtitle">Here's what's happening in your workspace today.</p>
         </div>
       </div>

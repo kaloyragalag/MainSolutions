@@ -13,7 +13,7 @@ const EyeIcon = ({ open }: { open: boolean }) => open
 const RegisterPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState<RegisterRequest>({ firstName: '', lastName: '', email: '', password: '' });
+  const [form, setForm] = useState<RegisterRequest>({ username: '', email: '', password: '' });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,15 +58,9 @@ const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          <div className="ms-row">
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="firstName">First name</label>
-              <input id="firstName" name="firstName" type="text" className="ms-field__input" placeholder="John" value={form.firstName} onChange={handleChange} required />
-            </div>
-            <div className="ms-field">
-              <label className="ms-field__label" htmlFor="lastName">Last name</label>
-              <input id="lastName" name="lastName" type="text" className="ms-field__input" placeholder="Doe" value={form.lastName} onChange={handleChange} required />
-            </div>
+          <div className="ms-field">
+            <label className="ms-field__label" htmlFor="userName">Username</label>
+            <input id="userName" name="userName" type="text" className="ms-field__input" placeholder="John.Doe" value={form.username} onChange={handleChange} required />
           </div>
 
           <div className="ms-field">

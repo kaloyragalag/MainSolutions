@@ -14,8 +14,8 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  const initials = user
-    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+  const initials = user?.username?.length
+    ? user.username[0].toUpperCase()
     : '';
 
   return (
@@ -46,7 +46,7 @@ const Navbar: React.FC = () => {
             {dropdownOpen && (
               <div className="topbar__dropdown">
                 <div className="topbar__dropdown-header">
-                  <p className="topbar__dropdown-name">{user.firstName} {user.lastName}</p>
+                  <p className="topbar__dropdown-name">{user.username}</p>
                   <p className="topbar__dropdown-email">{user.email}</p>
                 </div>
                 <button className="topbar__dropdown-item topbar__dropdown-item--danger" onClick={handleLogout}>
