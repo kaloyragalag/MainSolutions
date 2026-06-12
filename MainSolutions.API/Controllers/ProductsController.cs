@@ -16,6 +16,7 @@ public class ProductsController : BaseController<Product>
         _productRepository = productRepository;
     }
 
+    [Authorize(Roles = "Admin,Editor,Viewer")]
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -25,6 +26,7 @@ public class ProductsController : BaseController<Product>
         return product is null ? NotFound() : Ok(product);
     }
 
+    [Authorize(Roles = "Admin")]
     public override async Task<IActionResult> Create([FromBody] Product entity)
     {
         if (!await _productRepository.CategoryExistsAsync(entity.CategoryId))
@@ -34,6 +36,7 @@ public class ProductsController : BaseController<Product>
         return await base.Create(entity);
     }
 
+    [Authorize(Roles = "Admin,Editor")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

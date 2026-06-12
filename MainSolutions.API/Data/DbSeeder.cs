@@ -23,11 +23,28 @@ public static class DbSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
                 Username = "admin.admin",
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                Role = "Admin"
             });
             await context.SaveChangesAsync();
             Console.WriteLine("Seed: Admin user created.");
         }
+
+        if (!await context.Users.AnyAsync(u => u.Email == "editor@mainsolutions.com"))
+        {
+            context.Users.Add(new User
+            {
+                Email = "editor@mainsolutions.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Editor@123"),
+                Username = "editor.editor",
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true,
+                Role = "Editor"
+            });
+            await context.SaveChangesAsync();
+            Console.WriteLine("Seed: Editor user created.");
+        }
+        
         if (!await context.Users.AnyAsync(u => u.Email == "user@mainsolutions.com"))
         {
             context.Users.Add(new User
@@ -36,7 +53,8 @@ public static class DbSeeder
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("User@123"),
                 Username = "user.user",
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                Role = "Viewer"
             });
             await context.SaveChangesAsync();
             Console.WriteLine("Seed: Regular user created.");

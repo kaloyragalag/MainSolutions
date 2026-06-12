@@ -16,6 +16,7 @@ public class UsersController : BaseController<User>
         _userRepository = userRepository;
     }
 
+    [Authorize(Roles = "Admin,Editor")]
     public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
     {
         var existing = await _service.GetByIdAsync(id);
@@ -38,6 +39,6 @@ public class UsersController : BaseController<User>
 
         return await base.Update(id, fields);
     }
-
+    
     protected override object GetEntityId(User entity) => entity.Id;
 }

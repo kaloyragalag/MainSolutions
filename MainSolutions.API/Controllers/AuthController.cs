@@ -1,5 +1,6 @@
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MainSolutions.API.Controllers;

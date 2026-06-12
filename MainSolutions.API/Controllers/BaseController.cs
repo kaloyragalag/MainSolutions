@@ -1,6 +1,7 @@
 using MainSolutions.API.Models;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MainSolutions.API.Controllers;
@@ -17,6 +18,7 @@ public abstract class BaseController<T> : ControllerBase where T : class
     }
 
     /// <summary>Get a paginated list of all records.</summary>
+    [Authorize(Roles = "Admin,Editor,Viewer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public virtual async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
@@ -26,6 +28,7 @@ public abstract class BaseController<T> : ControllerBase where T : class
     }
 
     /// <summary>Get a single record by ID.</summary>
+    [Authorize(Roles = "Admin,Editor,Viewer")]
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -36,6 +39,7 @@ public abstract class BaseController<T> : ControllerBase where T : class
     }
 
     /// <summary>Create a new record.</summary>
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -46,6 +50,7 @@ public abstract class BaseController<T> : ControllerBase where T : class
     }
 
     /// <summary>Partially update an existing record — only provided fields are applied.</summary>
+    [Authorize(Roles = "Admin,Editor")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -64,6 +69,7 @@ public abstract class BaseController<T> : ControllerBase where T : class
     }
 
     /// <summary>Delete a record by ID.</summary>
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

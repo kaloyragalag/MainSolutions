@@ -16,6 +16,7 @@ public class CustomerController : BaseController<Customer>
         _customerRepository = repository;
     }
 
+    [Authorize(Roles = "Admin")]
     public override async Task<IActionResult> Create([FromBody] Customer entity)
     {
         if (!await _customerRepository.UserExistsAsync(entity.UserId))
@@ -29,6 +30,7 @@ public class CustomerController : BaseController<Customer>
         return await base.Create(entity);
     }
 
+    [Authorize(Roles = "Admin,Editor")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

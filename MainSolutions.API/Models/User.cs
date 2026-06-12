@@ -10,4 +10,7 @@ public class User : BaseEntity
     public DateTime? LastLoginAt { get; set; }
     // navigation
     public Customer? Customer { get; set; }
+
+    [MaxLength(20)]
+    public string Role { get; set; } = "Viewer"; // Admin, Editor, Viewer
 }

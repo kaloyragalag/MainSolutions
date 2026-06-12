@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BasePage from "../Layout/BasePage";
 import { CrudService } from "../../types/crud";
+import { getUserRole, canCreate, canUpdate, canDelete } from "../../utils/auth";
 import "./CrudPage.css";
 
 interface EntityBase {
@@ -218,6 +219,11 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  
+  const role = getUserRole();
+  const allowCreate = canCreate(role);
+  const allowUpdate = canUpdate(role);
+  const allowDelete = canDelete(role);
 
   const fetchItems = async (targetPage: number = page) => {
     setLoading(true);
@@ -273,12 +279,14 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   };
 
   const openCreateModal = () => {
+    if (!allowCreate) return;
     setFormData(emptyFormData);
     setFormError(null);
     setModalMode("create");
   };
 
   const openEditModal = (item: T) => {
+    if (!allowUpdate) return;
     setFormData(buildFormData(item));
     setFormError(null);
     setModalMode("edit");
@@ -329,7 +337,7 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   };
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !allowDelete) return;
     setDeleting(true);
     try {
       await service.delete(deleteTarget.id);
@@ -361,10 +369,12 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
           <h1 className="ms-page-header__title">{title}</h1>
           {subtitle && <p className="ms-page-header__subtitle">{subtitle}</p>}
         </div>
-        <button className="ms-btn ms-btn--primary" onClick={openCreateModal}>
-          <PlusIcon />
-          Create {entityName}
-        </button>
+        {allowCreate && (
+          <button className="ms-btn ms-btn--primary" onClick={openCreateModal}>
+            <PlusIcon />
+            Create {entityName}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -458,20 +468,24 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
               </div>
 
               <div className="crud-detail__actions">
-                <button
-                  className="ms-btn ms-btn--secondary"
-                  onClick={() => openEditModal(selectedItem)}
-                >
-                  <EditIcon />
-                  Edit
-                </button>
-                <button
-                  className="ms-btn ms-btn--danger"
-                  onClick={() => setDeleteTarget(selectedItem)}
-                >
-                  <TrashIcon />
-                  Delete
-                </button>
+                {allowUpdate && (
+                  <button
+                    className="ms-btn ms-btn--secondary"
+                    onClick={() => openEditModal(selectedItem)}
+                  >
+                    <EditIcon />
+                    Edit
+                  </button>
+                )}
+                {allowDelete && (
+                  <button
+                    className="ms-btn ms-btn--danger"
+                    onClick={() => setDeleteTarget(selectedItem)}
+                  >
+                    <TrashIcon />
+                    Delete
+                  </button>
+                )}
               </div>
 
               <div className="crud-detail__section">
@@ -504,11 +518,8 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                   ? "Loading..."
                   : `Select a ${entityName} to view details, or create a new one.`}
               </p>
-              {!loading && (
-                <button
-                  className="ms-btn ms-btn--primary"
-                  onClick={openCreateModal}
-                >
+              {!loading && allowCreate && (
+                <button className="ms-btn ms-btn--primary" onClick={openCreateModal}>
                   <PlusIcon />
                   Create {entityName}
                 </button>

@@ -16,6 +16,7 @@ public class CategoriesController : BaseController<Category>
         _categoryRepository = categoryRepository;
     }
 
+    [Authorize(Roles = "Admin")]
     public override async Task<IActionResult> Create([FromBody] Category entity)
     {
         if (await _categoryRepository.ExistsAsync(entity.Name))
@@ -25,6 +26,7 @@ public class CategoriesController : BaseController<Category>
         return await base.Create(entity);
     }
 
+    [Authorize(Roles = "Admin,Editor")]
     public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
     {
         var existing = await _service.GetByIdAsync(id);
