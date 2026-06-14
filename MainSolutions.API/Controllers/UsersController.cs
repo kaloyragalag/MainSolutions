@@ -11,15 +11,16 @@ public class UsersController : BaseController<User>
 {
     private readonly IUserRepository _userRepository;
 
-    public UsersController(IUserService service, IUserRepository userRepository) : base(service)
+    public UsersController(IUserService service, IUserRepository userRepository, IEntityPatcher patcher)
+        : base(service, patcher)
     {
         _userRepository = userRepository;
     }
 
     [Authorize(Roles = "Admin,Editor")]
-    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
+    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields, CancellationToken cancellationToken)
     {
-        var existing = await _service.GetByIdAsync(id);
+        var existing = await _service.GetByIdAsync(id, cancellationToken);
         if (existing is null)
             return NotFound(new { message = $"User with id {id} was not found." });
 
@@ -28,7 +29,7 @@ public class UsersController : BaseController<User>
             var newEmail = emailValue.ToString()!;
             if (!string.Equals(existing.Email, newEmail, StringComparison.OrdinalIgnoreCase))
             {
-                var emailTaken = await _userRepository.ExistsAsync(newEmail);
+                var emailTaken = await _userRepository.ExistsAsync(newEmail, cancellationToken);
                 if (emailTaken)
                     return Conflict(new { message = $"Email '{newEmail}' is already in use." });
             }
@@ -37,8 +38,8 @@ public class UsersController : BaseController<User>
         // Protect sensitive fields from being updated via this endpoint
         fields.Remove("passwordHash");
 
-        return await base.Update(id, fields);
+        return await base.Update(id, fields, cancellationToken);
     }
-    
+
     protected override object GetEntityId(User entity) => entity.Id;
 }

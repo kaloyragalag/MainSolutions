@@ -11,14 +11,14 @@ public class CustomerRepository : BaseRepository<Customer>, ICustomerRepository
     {
     }
 
-    public async Task<Customer?> GetByUserIdAsync(int userId)
+    public async Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
-        return await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+        return await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
     }
 
-    public async Task<bool> UserExistsAsync(int userId)
+    public async Task<bool> UserExistsAsync(int userId, CancellationToken cancellationToken = default)
     {
-        return await _context.Users.AnyAsync(u => u.Id == userId);
+        return await _context.Users.AnyAsync(u => u.Id == userId, cancellationToken);
     }
 
     protected override IQueryable<Customer> ApplySearch(IQueryable<Customer> query, string? search)

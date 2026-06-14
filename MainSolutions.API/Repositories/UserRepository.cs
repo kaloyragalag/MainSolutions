@@ -11,11 +11,11 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
-        => await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+        => await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
 
-    public async Task<bool> ExistsAsync(string email)
-        => await _dbSet.AnyAsync(u => u.Email.ToLower() == email.ToLower());
+    public async Task<bool> ExistsAsync(string email, CancellationToken cancellationToken = default)
+        => await _dbSet.AnyAsync(u => u.Email.ToLower() == email.ToLower(), cancellationToken);
 
     protected override IQueryable<User> ApplySearch(IQueryable<User> query, string? search)
     {

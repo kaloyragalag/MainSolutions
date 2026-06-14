@@ -1,4 +1,5 @@
 import { LoginRequest, LoginResponse, RegisterRequest } from '../types/auth';
+import { tokenStorage } from './storage';
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://localhost:5001';
 
@@ -30,25 +31,22 @@ export const authService = {
   },
 
   saveSession(data: LoginResponse): void {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data));
+    tokenStorage.saveSession(data);
   },
 
   clearSession(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    tokenStorage.clearSession();
   },
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return tokenStorage.getToken();
   },
 
   getUser(): LoginResponse | null {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    return tokenStorage.getUser<LoginResponse>();
   },
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!tokenStorage.getToken();
   },
 };

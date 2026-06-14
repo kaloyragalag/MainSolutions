@@ -1,28 +1,24 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Models;
 using MainSolutions.API.Repositories.Interfaces;
 using MainSolutions.API.Services.Interfaces;
-using Microsoft.IdentityModel.Tokens;
 
 namespace MainSolutions.API.Services;
 
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IConfiguration _configuration;
+    private readonly ITokenService _tokenService;
 
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, ITokenService tokenService)
     {
         _userRepository = userRepository;
-        _configuration = configuration;
+        _tokenService = tokenService;
     }
 
-    public async Task<LoginResponse> LoginAsync(LoginRequest request)
+    public async Task<LoginResponse> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        var user = await _userRepository.GetByEmailAsync(request.Email)
+        var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken)
             ?? throw new UnauthorizedAccessException("Invalid email or password.");
 
         if (!user.IsActive)
@@ -32,14 +28,14 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid email or password.");
 
         user.LastLoginAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user);
+        await _userRepository.UpdateAsync(user, cancellationToken);
 
         return BuildLoginResponse(user);
     }
 
-    public async Task<LoginResponse> RegisterAsync(RegisterRequest request)
+    public async Task<LoginResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        if (await _userRepository.ExistsAsync(request.Email))
+        if (await _userRepository.ExistsAsync(request.Email, cancellationToken))
             throw new InvalidOperationException("An account with this email already exists.");
 
         var user = new User
@@ -51,7 +47,7 @@ public class AuthService : IAuthService
             IsActive = true
         };
 
-        await _userRepository.CreateAsync(user);
+        await _userRepository.CreateAsync(user, cancellationToken);
 
         return BuildLoginResponse(user);
     }
@@ -59,7 +55,7 @@ public class AuthService : IAuthService
     private LoginResponse BuildLoginResponse(User user)
     {
         var expiresAt = DateTime.UtcNow.AddHours(8);
-        var token = GenerateJwtToken(user, expiresAt);
+        var token = _tokenService.GenerateToken(user, expiresAt);
 
         return new LoginResponse
         {
@@ -68,33 +64,5 @@ public class AuthService : IAuthService
             Username = user.Username,
             ExpiresAt = expiresAt
         };
-    }
-
-    private string GenerateJwtToken(User user, DateTime expiresAt)
-    {
-        var jwtKey = _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("JWT key is not configured.");
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, user.Role) // <-- add this
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: expiresAt,
-            signingCredentials: creds
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

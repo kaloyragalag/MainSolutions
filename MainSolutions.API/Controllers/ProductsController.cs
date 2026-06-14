@@ -11,7 +11,8 @@ public class ProductsController : BaseController<Product>
 {
     private readonly IProductRepository _productRepository;
 
-    public ProductsController(IProductService service, IProductRepository productRepository) : base(service)
+    public ProductsController(IProductService service, IProductRepository productRepository, IEntityPatcher patcher)
+        : base(service, patcher)
     {
         _productRepository = productRepository;
     }
@@ -20,29 +21,29 @@ public class ProductsController : BaseController<Product>
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public override async Task<IActionResult> GetById(int id)
+    public override async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdWithCategoryAsync(id);
+        var product = await _productRepository.GetByIdWithCategoryAsync(id, cancellationToken);
         return product is null ? NotFound() : Ok(product);
     }
 
     [Authorize(Roles = "Admin")]
-    public override async Task<IActionResult> Create([FromBody] Product entity)
+    public override async Task<IActionResult> Create([FromBody] Product entity, CancellationToken cancellationToken)
     {
-        if (!await _productRepository.CategoryExistsAsync(entity.CategoryId))
+        if (!await _productRepository.CategoryExistsAsync(entity.CategoryId, cancellationToken))
             return BadRequest(new { message = $"Category with id {entity.CategoryId} does not exist." });
 
         entity.CreatedAt = DateTime.UtcNow;
-        return await base.Create(entity);
+        return await base.Create(entity, cancellationToken);
     }
 
     [Authorize(Roles = "Admin,Editor")]
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
+    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields, CancellationToken cancellationToken)
     {
-        var existing = await _service.GetByIdAsync(id);
+        var existing = await _service.GetByIdAsync(id, cancellationToken);
         if (existing is null)
             return NotFound(new { message = $"Product with id {id} was not found." });
 
@@ -50,14 +51,14 @@ public class ProductsController : BaseController<Product>
         {
             if (int.TryParse(categoryIdValue.ToString(), out var categoryId))
             {
-                if (!await _productRepository.CategoryExistsAsync(categoryId))
+                if (!await _productRepository.CategoryExistsAsync(categoryId, cancellationToken))
                     return BadRequest(new { message = $"Category with id {categoryId} does not exist." });
             }
         }
 
-        await base.Update(id, fields);
+        await base.Update(id, fields, cancellationToken);
 
-        var updated = await _productRepository.GetByIdWithCategoryAsync(id);
+        var updated = await _productRepository.GetByIdWithCategoryAsync(id, cancellationToken);
         return Ok(updated);
     }
 

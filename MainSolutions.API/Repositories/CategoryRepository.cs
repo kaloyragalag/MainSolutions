@@ -11,11 +11,11 @@ public class CategoryRepository : BaseRepository<Category>, ICategoryRepository
     {
     }
 
-    public async Task<bool> ExistsAsync(string name)
-        => await _dbSet.AnyAsync(c => c.Name.ToLower() == name.ToLower());
+    public async Task<bool> ExistsAsync(string name, CancellationToken cancellationToken = default)
+        => await _dbSet.AnyAsync(c => c.Name.ToLower() == name.ToLower(), cancellationToken);
 
-    public async Task<bool> ExistsAsync(string name, int excludeId)
-        => await _dbSet.AnyAsync(c => c.Name.ToLower() == name.ToLower() && c.Id != excludeId);
+    public async Task<bool> ExistsAsync(string name, int excludeId, CancellationToken cancellationToken = default)
+        => await _dbSet.AnyAsync(c => c.Name.ToLower() == name.ToLower() && c.Id != excludeId, cancellationToken);
 
     protected override IQueryable<Category> ApplySearch(IQueryable<Category> query, string? search)
     {

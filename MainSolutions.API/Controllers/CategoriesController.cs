@@ -11,25 +11,26 @@ public class CategoriesController : BaseController<Category>
 {
     private readonly ICategoryRepository _categoryRepository;
 
-    public CategoriesController(ICategoryService service, ICategoryRepository categoryRepository) : base(service)
+    public CategoriesController(ICategoryService service, ICategoryRepository categoryRepository, IEntityPatcher patcher)
+        : base(service, patcher)
     {
         _categoryRepository = categoryRepository;
     }
 
     [Authorize(Roles = "Admin")]
-    public override async Task<IActionResult> Create([FromBody] Category entity)
+    public override async Task<IActionResult> Create([FromBody] Category entity, CancellationToken cancellationToken)
     {
-        if (await _categoryRepository.ExistsAsync(entity.Name))
+        if (await _categoryRepository.ExistsAsync(entity.Name, cancellationToken))
             return Conflict(new { message = $"Category '{entity.Name}' already exists." });
 
         entity.CreatedAt = DateTime.UtcNow;
-        return await base.Create(entity);
+        return await base.Create(entity, cancellationToken);
     }
 
     [Authorize(Roles = "Admin,Editor")]
-    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
+    public override async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields, CancellationToken cancellationToken)
     {
-        var existing = await _service.GetByIdAsync(id);
+        var existing = await _service.GetByIdAsync(id, cancellationToken);
         if (existing is null)
             return NotFound(new { message = $"Category with id {id} was not found." });
 
@@ -38,12 +39,12 @@ public class CategoriesController : BaseController<Category>
             var newName = nameValue.ToString()!;
             if (!string.Equals(existing.Name, newName, StringComparison.OrdinalIgnoreCase))
             {
-                if (await _categoryRepository.ExistsAsync(newName, id))
+                if (await _categoryRepository.ExistsAsync(newName, id, cancellationToken))
                     return Conflict(new { message = $"Category '{newName}' already exists." });
             }
         }
 
-        return await base.Update(id, fields);
+        return await base.Update(id, fields, cancellationToken);
     }
 
     protected override object GetEntityId(Category entity) => entity.Id;

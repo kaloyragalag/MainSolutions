@@ -17,19 +17,19 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public virtual async Task<PagedResult<T>> GetAllAsync(PaginationQuery query)
+    public virtual async Task<PagedResult<T>> GetAllAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _dbSet.AsQueryable();
+        var queryable = _dbSet.AsNoTracking().AsQueryable();
 
         queryable = ApplySearch(queryable, query.Search);
         queryable = ApplySort(queryable, query.SortBy, query.SortOrder);
 
-        var totalCount = await queryable.CountAsync();
+        var totalCount = await queryable.CountAsync(cancellationToken);
 
         var items = await queryable
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<T>
         {
@@ -40,34 +40,34 @@ public abstract class BaseRepository<T> : IBaseRepository<T> where T : class
         };
     }
 
-    public virtual async Task<T?> GetByIdAsync(int id)
-        => await _dbSet.FindAsync(id);
+    public virtual async Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        => await _dbSet.FindAsync([id], cancellationToken);
 
-    public virtual async Task<T> CreateAsync(T entity)
+    public virtual async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
     {
         _dbSet.Add(entity);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
         return entity;
     }
 
-    public virtual async Task UpdateAsync(T entity)
+    public virtual async Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async Task DeleteAsync(int id)
+    public virtual async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetByIdAsync(id);
+        var entity = await GetByIdAsync(id, cancellationToken);
         if (entity is not null)
         {
             _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 
-    public virtual async Task<bool> ExistsAsync(int id)
-        => await _dbSet.FindAsync(id) is not null;
+    public virtual async Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default)
+        => await _dbSet.FindAsync([id], cancellationToken) is not null;
 
     // Override in derived repositories to define searchable fields
     protected virtual IQueryable<T> ApplySearch(IQueryable<T> query, string? search)

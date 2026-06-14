@@ -1,4 +1,3 @@
-using MainSolutions.API.Models;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -11,19 +10,21 @@ namespace MainSolutions.API.Controllers;
 public abstract class BaseController<T> : ControllerBase where T : class
 {
     protected readonly IBaseService<T> _service;
+    protected readonly IEntityPatcher _patcher;
 
-    protected BaseController(IBaseService<T> service)
+    protected BaseController(IBaseService<T> service, IEntityPatcher patcher)
     {
         _service = service;
+        _patcher = patcher;
     }
 
     /// <summary>Get a paginated list of all records.</summary>
     [Authorize(Roles = "Admin,Editor,Viewer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
+    public virtual async Task<IActionResult> GetAll([FromQuery] PaginationQuery query, CancellationToken cancellationToken)
     {
-        var result = await _service.GetAllAsync(query);
+        var result = await _service.GetAllAsync(query, cancellationToken);
         return Ok(result);
     }
 
@@ -32,9 +33,9 @@ public abstract class BaseController<T> : ControllerBase where T : class
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public virtual async Task<IActionResult> GetById(int id)
+    public virtual async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
-        var entity = await _service.GetByIdAsync(id);
+        var entity = await _service.GetByIdAsync(id, cancellationToken);
         return entity is null ? NotFound() : Ok(entity);
     }
 
@@ -43,9 +44,9 @@ public abstract class BaseController<T> : ControllerBase where T : class
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public virtual async Task<IActionResult> Create([FromBody] T entity)
+    public virtual async Task<IActionResult> Create([FromBody] T entity, CancellationToken cancellationToken)
     {
-        var created = await _service.CreateAsync(entity);
+        var created = await _service.CreateAsync(entity, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = GetEntityId(created) }, created);
     }
 
@@ -54,17 +55,17 @@ public abstract class BaseController<T> : ControllerBase where T : class
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public virtual async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields)
+    public virtual async Task<IActionResult> Update(int id, [FromBody] Dictionary<string, object?> fields, CancellationToken cancellationToken)
     {
-        var existing = await _service.GetByIdAsync(id);
+        var existing = await _service.GetByIdAsync(id, cancellationToken);
         if (existing is null) return NotFound(new { message = $"Record with id {id} was not found." });
 
         fields["updatedAt"] = DateTime.UtcNow.ToString("o");
         fields.Remove("createdAt");
         fields.Remove("id");
 
-        ApplyFields(existing, fields);
-        await _service.UpdateAsync(existing);
+        _patcher.Apply(existing, fields);
+        await _service.UpdateAsync(existing, cancellationToken);
         return Ok(existing);
     }
 
@@ -73,49 +74,15 @@ public abstract class BaseController<T> : ControllerBase where T : class
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public virtual async Task<IActionResult> Delete(int id)
+    public virtual async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        var existing = await _service.GetByIdAsync(id);
+        var existing = await _service.GetByIdAsync(id, cancellationToken);
         if (existing is null) return NotFound(new { message = $"Record with id {id} was not found." });
 
-        await _service.DeleteAsync(id);
+        await _service.DeleteAsync(id, cancellationToken);
         return NoContent();
     }
 
     /// <summary>Override in derived controllers to return the entity's ID for the Created response.</summary>
     protected virtual object GetEntityId(T entity) => 0;
-
-    /// <summary>Applies only the provided fields from the request body onto the existing entity.</summary>
-    private static void ApplyFields(T entity, Dictionary<string, object?> fields)
-    {
-        var entityType = typeof(T);
-        foreach (var (key, value) in fields)
-        {
-            var property = entityType.GetProperty(
-                key,
-                System.Reflection.BindingFlags.IgnoreCase |
-                System.Reflection.BindingFlags.Public |
-                System.Reflection.BindingFlags.Instance
-            );
-
-            if (property is null || !property.CanWrite) continue;
-
-            if (value is null)
-            {
-                property.SetValue(entity, null);
-                continue;
-            }
-
-            try
-            {
-                var targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-                var converted = Convert.ChangeType(value.ToString(), targetType);
-                property.SetValue(entity, converted);
-            }
-            catch
-            {
-                // skip fields that can't be converted
-            }
-        }
-    }
 }

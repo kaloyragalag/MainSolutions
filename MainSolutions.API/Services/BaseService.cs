@@ -13,18 +13,18 @@ public abstract class BaseService<T> : IBaseService<T> where T : class
         _repository = repository;
     }
 
-    public virtual Task<PagedResult<T>> GetAllAsync(PaginationQuery query)
-        => _repository.GetAllAsync(query);
+    public virtual Task<PagedResult<T>> GetAllAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+        => _repository.GetAllAsync(query, cancellationToken);
 
-    public virtual Task<T?> GetByIdAsync(int id)
-        => _repository.GetByIdAsync(id);
+    public virtual Task<T?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        => _repository.GetByIdAsync(id, cancellationToken);
 
-    public virtual Task<T> CreateAsync(T entity)
-        => _repository.CreateAsync(entity);
+    public virtual Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
+        => _repository.CreateAsync(entity, cancellationToken);
 
-    public virtual Task UpdateAsync(T entity)
-        => _repository.UpdateAsync(entity);
+    public virtual Task UpdateAsync(T entity, CancellationToken cancellationToken = default)
+        => _repository.UpdateAsync(entity, cancellationToken);
 
-    public virtual Task DeleteAsync(int id)
-        => _repository.DeleteAsync(id);
+    public virtual Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+        => _repository.DeleteAsync(id, cancellationToken);
 }

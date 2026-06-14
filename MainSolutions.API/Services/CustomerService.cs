@@ -13,8 +13,8 @@ public class CustomerService : BaseService<Customer>, ICustomerService
         _customerRepository = customerRepository;
     }
 
-    public async Task<Customer?> GetByUserIdAsync(int userId)
+    public async Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
-        return await _customerRepository.GetByUserIdAsync(userId);
+        return await _customerRepository.GetByUserIdAsync(userId, cancellationToken);
     }
 }

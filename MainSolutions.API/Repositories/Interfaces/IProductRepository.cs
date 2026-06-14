@@ -4,6 +4,6 @@ namespace MainSolutions.API.Repositories.Interfaces;
 
 public interface IProductRepository : IBaseRepository<Product>
 {
-    Task<Product?> GetByIdWithCategoryAsync(int id);
-    Task<bool> CategoryExistsAsync(int categoryId);
+    Task<Product?> GetByIdWithCategoryAsync(int id, CancellationToken cancellationToken = default);
+    Task<bool> CategoryExistsAsync(int categoryId, CancellationToken cancellationToken = default);
 }

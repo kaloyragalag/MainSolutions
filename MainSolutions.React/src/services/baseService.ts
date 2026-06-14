@@ -1,9 +1,9 @@
+import { tokenStorage } from './storage';
+
 const API_URL = process.env.REACT_APP_API_URL || 'https://localhost:5001';
 
-const getToken = () => localStorage.getItem('token');
-
 const headers = (): HeadersInit => {
-  const token = getToken();
+  const token = tokenStorage.getToken();
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

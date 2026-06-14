@@ -12,17 +12,17 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
     {
     }
 
-    public async Task<Product?> GetByIdWithCategoryAsync(int id)
+    public async Task<Product?> GetByIdWithCategoryAsync(int id, CancellationToken cancellationToken = default)
         => await _dbSet
             .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
-    public async Task<bool> CategoryExistsAsync(int categoryId)
-        => await _context.Categories.AnyAsync(c => c.Id == categoryId);
+    public async Task<bool> CategoryExistsAsync(int categoryId, CancellationToken cancellationToken = default)
+        => await _context.Categories.AnyAsync(c => c.Id == categoryId, cancellationToken);
 
-    public override async Task<PagedResult<Product>> GetAllAsync(PaginationQuery query)
+    public override async Task<PagedResult<Product>> GetAllAsync(PaginationQuery query, CancellationToken cancellationToken = default)
     {
-        var queryable = _dbSet.Include(p => p.Category).AsQueryable();
+        var queryable = _dbSet.Include(p => p.Category).AsNoTracking().AsQueryable();
 
         queryable = ApplySearch(queryable, query.Search);
 
@@ -40,12 +40,12 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
             };
         }
 
-        var totalCount = await queryable.CountAsync();
+        var totalCount = await queryable.CountAsync(cancellationToken);
 
         var items = await queryable
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<Product>
         {
@@ -64,7 +64,7 @@ public class ProductRepository : BaseRepository<Product>, IProductRepository
         return query.Where(p =>
             p.Name.ToLower().Contains(term) ||
             p.Description.ToLower().Contains(term) ||
-            p.Category.Name.ToLower().Contains(term)
+            (p.Category != null && p.Category.Name.ToLower().Contains(term))
         );
     }
 }
