@@ -2,6 +2,7 @@ using FluentAssertions;
 using MainSolutions.API.Controllers;
 using MainSolutions.API.Models;
 using MainSolutions.API.Repositories.Interfaces;
+using MainSolutions.API.Services;
 using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
@@ -19,7 +20,7 @@ public class CustomerControllerTests
     {
         _serviceMock = new Mock<ICustomerService>();
         _repositoryMock = new Mock<ICustomerRepository>();
-        _controller = new CustomerController(_serviceMock.Object, _repositoryMock.Object);
+        _controller = new CustomerController(_serviceMock.Object, _repositoryMock.Object, new ReflectionEntityPatcher());
     }
 
     [Fact]
@@ -29,11 +30,11 @@ public class CustomerControllerTests
         var customer = new Customer { UserId = 1, FirstName = "Juan", LastName = "Dela Cruz" };
 
         _repositoryMock
-            .Setup(r => r.UserExistsAsync(customer.UserId))
+            .Setup(r => r.UserExistsAsync(customer.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _controller.Create(customer);
+        var result = await _controller.Create(customer, CancellationToken.None);
 
         // Assert
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
@@ -42,8 +43,8 @@ public class CustomerControllerTests
             message = $"User with id {customer.UserId} does not exist."
         });
 
-        _repositoryMock.Verify(r => r.UserExistsAsync(customer.UserId), Times.Once);
-        _repositoryMock.Verify(r => r.GetByUserIdAsync(It.IsAny<int>()), Times.Never);
+        _repositoryMock.Verify(r => r.UserExistsAsync(customer.UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.GetByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -54,15 +55,15 @@ public class CustomerControllerTests
         var existingCustomer = new Customer { Id = 5, UserId = 1, FirstName = "Existing", LastName = "Customer" };
 
         _repositoryMock
-            .Setup(r => r.UserExistsAsync(customer.UserId))
+            .Setup(r => r.UserExistsAsync(customer.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         _repositoryMock
-            .Setup(r => r.GetByUserIdAsync(customer.UserId))
+            .Setup(r => r.GetByUserIdAsync(customer.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingCustomer);
 
         // Act
-        var result = await _controller.Create(customer);
+        var result = await _controller.Create(customer, CancellationToken.None);
 
         // Assert
         var conflict = result.Should().BeOfType<ConflictObjectResult>().Subject;
@@ -71,9 +72,9 @@ public class CustomerControllerTests
             message = $"User with id {customer.UserId} is already associated with a customer."
         });
 
-        _repositoryMock.Verify(r => r.UserExistsAsync(customer.UserId), Times.Once);
-        _repositoryMock.Verify(r => r.GetByUserIdAsync(customer.UserId), Times.Once);
-        _serviceMock.Verify(s => s.CreateAsync(It.IsAny<Customer>()), Times.Never);
+        _repositoryMock.Verify(r => r.UserExistsAsync(customer.UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.GetByUserIdAsync(customer.UserId, It.IsAny<CancellationToken>()), Times.Once);
+        _serviceMock.Verify(s => s.CreateAsync(It.IsAny<Customer>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -83,27 +84,27 @@ public class CustomerControllerTests
         var customer = new Customer { UserId = 1, FirstName = "Juan", LastName = "Dela Cruz" };
 
         _repositoryMock
-            .Setup(r => r.UserExistsAsync(customer.UserId))
+            .Setup(r => r.UserExistsAsync(customer.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         _repositoryMock
-            .Setup(r => r.GetByUserIdAsync(customer.UserId))
+            .Setup(r => r.GetByUserIdAsync(customer.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Customer?)null);
 
         _serviceMock
-            .Setup(s => s.CreateAsync(It.IsAny<Customer>()))
+            .Setup(s => s.CreateAsync(It.IsAny<Customer>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(customer);
 
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await _controller.Create(customer);
+        var result = await _controller.Create(customer, CancellationToken.None);
 
         // Assert
         customer.CreatedAt.Should().BeOnOrAfter(before);
         customer.CreatedAt.Should().BeOnOrBefore(DateTime.UtcNow);
 
-        _serviceMock.Verify(s => s.CreateAsync(customer), Times.Once);
+        _serviceMock.Verify(s => s.CreateAsync(customer, It.IsAny<CancellationToken>()), Times.Once);
         result.Should().NotBeNull();
     }
 
@@ -115,11 +116,11 @@ public class CustomerControllerTests
         var fields = new Dictionary<string, object?> { { "firstName", "Updated" } };
 
         _serviceMock
-            .Setup(s => s.GetByIdAsync(id))
+            .Setup(s => s.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Customer?)null);
 
         // Act
-        var result = await _controller.Update(id, fields);
+        var result = await _controller.Update(id, fields, CancellationToken.None);
 
         // Assert
         var notFound = result.Should().BeOfType<NotFoundObjectResult>().Subject;
@@ -128,8 +129,8 @@ public class CustomerControllerTests
             message = $"Customer with id {id} was not found."
         });
 
-        _serviceMock.Verify(s => s.GetByIdAsync(id), Times.Once);
-        _repositoryMock.Verify(r => r.UserExistsAsync(It.IsAny<int>()), Times.Never);
+        _serviceMock.Verify(s => s.GetByIdAsync(id, It.IsAny<CancellationToken>()), Times.Once);
+        _repositoryMock.Verify(r => r.UserExistsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -141,15 +142,15 @@ public class CustomerControllerTests
         var fields = new Dictionary<string, object?> { { "userId", "999" } };
 
         _serviceMock
-            .Setup(s => s.GetByIdAsync(id))
+            .Setup(s => s.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
 
         _repositoryMock
-            .Setup(r => r.UserExistsAsync(999))
+            .Setup(r => r.UserExistsAsync(999, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _controller.Update(id, fields);
+        var result = await _controller.Update(id, fields, CancellationToken.None);
 
         // Assert
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
@@ -158,7 +159,7 @@ public class CustomerControllerTests
             message = "User with id 999 does not exist."
         });
 
-        _repositoryMock.Verify(r => r.UserExistsAsync(999), Times.Once);
+        _repositoryMock.Verify(r => r.UserExistsAsync(999, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -171,20 +172,20 @@ public class CustomerControllerTests
         var fields = new Dictionary<string, object?> { { "firstName", "Updated" } };
 
         _serviceMock
-            .Setup(s => s.GetByIdAsync(id))
+            .Setup(s => s.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existing);
 
         _repositoryMock
-            .Setup(r => r.GetByIdAsync(id))
+            .Setup(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(updated);
 
         // Act
-        var result = await _controller.Update(id, fields);
+        var result = await _controller.Update(id, fields, CancellationToken.None);
 
         // Assert
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().Be(updated);
 
-        _repositoryMock.Verify(r => r.GetByIdAsync(id), Times.Once);
+        _repositoryMock.Verify(r => r.GetByIdAsync(id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -1,7 +1,8 @@
+using MainSolutions.API.Models;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
 using MainSolutions.API.Services;
-using Microsoft.Extensions.Configuration;
+using MainSolutions.API.Services.Interfaces;
 using Moq;
 
 namespace MainSolutions.Test.Services;
@@ -9,19 +10,19 @@ namespace MainSolutions.Test.Services;
 public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepoMock;
-    private readonly Mock<IConfiguration> _configMock;
+    private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
         _userRepoMock = new Mock<IUserRepository>();
-        _configMock = new Mock<IConfiguration>();
+        _tokenServiceMock = new Mock<ITokenService>();
 
-        _configMock.Setup(c => c["Jwt:Key"]).Returns("super-secret-test-key-that-is-long-enough");
-        _configMock.Setup(c => c["Jwt:Issuer"]).Returns("MainSolutions.API");
-        _configMock.Setup(c => c["Jwt:Audience"]).Returns("MainSolutions.React");
+        _tokenServiceMock
+            .Setup(t => t.GenerateToken(It.IsAny<User>(), It.IsAny<DateTime>()))
+            .Returns("jwt-token");
 
-        _authService = new AuthService(_userRepoMock.Object, _configMock.Object);
+        _authService = new AuthService(_userRepoMock.Object, _tokenServiceMock.Object);
     }
 
     #region Login
@@ -30,7 +31,9 @@ public class AuthServiceTests
     public async Task Login_ValidCredentials_ReturnsLoginResponse()
     {
         var user = CreateActiveUser("john@example.com", "password123");
-        _userRepoMock.Setup(r => r.GetByEmailAsync("john@example.com")).ReturnsAsync(user);
+        _userRepoMock
+            .Setup(r => r.GetByEmailAsync("john@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         var result = await _authService.LoginAsync(new LoginRequest
         {
@@ -46,7 +49,9 @@ public class AuthServiceTests
     [Fact]
     public async Task Login_UserNotFound_ThrowsUnauthorized()
     {
-        _userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync((User?)null);
+        _userRepoMock
+            .Setup(r => r.GetByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
 
         var act = () => _authService.LoginAsync(new LoginRequest
         {
@@ -62,7 +67,9 @@ public class AuthServiceTests
     public async Task Login_WrongPassword_ThrowsUnauthorized()
     {
         var user = CreateActiveUser("john@example.com", "password123");
-        _userRepoMock.Setup(r => r.GetByEmailAsync("john@example.com")).ReturnsAsync(user);
+        _userRepoMock
+            .Setup(r => r.GetByEmailAsync("john@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         var act = () => _authService.LoginAsync(new LoginRequest
         {
@@ -79,7 +86,9 @@ public class AuthServiceTests
     {
         var user = CreateActiveUser("john@example.com", "password123");
         user.IsActive = false;
-        _userRepoMock.Setup(r => r.GetByEmailAsync("john@example.com")).ReturnsAsync(user);
+        _userRepoMock
+            .Setup(r => r.GetByEmailAsync("john@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         var act = () => _authService.LoginAsync(new LoginRequest
         {
@@ -95,7 +104,9 @@ public class AuthServiceTests
     public async Task Login_ValidCredentials_UpdatesLastLoginAt()
     {
         var user = CreateActiveUser("john@example.com", "password123");
-        _userRepoMock.Setup(r => r.GetByEmailAsync("john@example.com")).ReturnsAsync(user);
+        _userRepoMock
+            .Setup(r => r.GetByEmailAsync("john@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         await _authService.LoginAsync(new LoginRequest
         {
@@ -103,7 +114,9 @@ public class AuthServiceTests
             Password = "password123"
         });
 
-        _userRepoMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.LastLoginAt != null)), Times.Once);
+        _userRepoMock.Verify(
+            r => r.UpdateAsync(It.Is<User>(u => u.LastLoginAt != null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     #endregion
@@ -113,8 +126,12 @@ public class AuthServiceTests
     [Fact]
     public async Task Register_NewUser_ReturnsLoginResponse()
     {
-        _userRepoMock.Setup(r => r.ExistsAsync("new@example.com")).ReturnsAsync(false);
-        _userRepoMock.Setup(r => r.CreateAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
+        _userRepoMock
+            .Setup(r => r.ExistsAsync("new@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _userRepoMock
+            .Setup(r => r.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u);
 
         var result = await _authService.RegisterAsync(new RegisterRequest
         {
@@ -132,7 +149,9 @@ public class AuthServiceTests
     [Fact]
     public async Task Register_ExistingEmail_ThrowsInvalidOperation()
     {
-        _userRepoMock.Setup(r => r.ExistsAsync("existing@example.com")).ReturnsAsync(true);
+        _userRepoMock
+            .Setup(r => r.ExistsAsync("existing@example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var act = () => _authService.RegisterAsync(new RegisterRequest
         {
@@ -148,8 +167,12 @@ public class AuthServiceTests
     [Fact]
     public async Task Register_NewUser_HashesPassword()
     {
-        _userRepoMock.Setup(r => r.ExistsAsync(It.IsAny<string>())).ReturnsAsync(false);
-        _userRepoMock.Setup(r => r.CreateAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
+        _userRepoMock
+            .Setup(r => r.ExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _userRepoMock
+            .Setup(r => r.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => u);
 
         await _authService.RegisterAsync(new RegisterRequest
         {
@@ -159,7 +182,8 @@ public class AuthServiceTests
         });
 
         _userRepoMock.Verify(r => r.CreateAsync(
-            It.Is<User>(u => u.PasswordHash != "plaintext" && u.PasswordHash.StartsWith("$2"))),
+            It.Is<User>(u => u.PasswordHash != "plaintext" && u.PasswordHash.StartsWith("$2")),
+            It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

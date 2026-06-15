@@ -2,6 +2,7 @@ using MainSolutions.API.Controllers;
 using MainSolutions.API.Models;
 using MainSolutions.API.Models.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
+using MainSolutions.API.Services;
 using MainSolutions.API.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public class ProductsControllerTests
     {
         _serviceMock = new Mock<IProductService>();
         _repositoryMock = new Mock<IProductRepository>();
-        _controller = new ProductsController(_serviceMock.Object, _repositoryMock.Object);
+        _controller = new ProductsController(_serviceMock.Object, _repositoryMock.Object, new ReflectionEntityPatcher());
     }
 
     #region GetAll
@@ -34,9 +35,11 @@ public class ProductsControllerTests
             Page = 1,
             PageSize = 10
         };
-        _serviceMock.Setup(s => s.GetAllAsync(It.IsAny<PaginationQuery>())).ReturnsAsync(paged);
+        _serviceMock
+            .Setup(s => s.GetAllAsync(It.IsAny<PaginationQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paged);
 
-        var result = await _controller.GetAll(new PaginationQuery());
+        var result = await _controller.GetAll(new PaginationQuery(), CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(StatusCodes.Status200OK);
@@ -51,9 +54,11 @@ public class ProductsControllerTests
     public async Task GetById_ExistingProduct_Returns200WithCategory()
     {
         var product = CreateProductWithCategory(1, "MacBook Pro", 1);
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1)).ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
 
-        var result = await _controller.GetById(1);
+        var result = await _controller.GetById(1, CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(StatusCodes.Status200OK);
@@ -64,9 +69,11 @@ public class ProductsControllerTests
     [Fact]
     public async Task GetById_NonExistentProduct_Returns404()
     {
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(999)).ReturnsAsync((Product?)null);
+        _repositoryMock
+            .Setup(r => r.GetByIdWithCategoryAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Product?)null);
 
-        var result = await _controller.GetById(999);
+        var result = await _controller.GetById(999, CancellationToken.None);
 
         result.Should().BeOfType<NotFoundResult>();
     }
@@ -79,10 +86,14 @@ public class ProductsControllerTests
     public async Task Create_ValidProduct_Returns201()
     {
         var product = CreateProduct(1, "MacBook Pro", 1);
-        _repositoryMock.Setup(r => r.CategoryExistsAsync(1)).ReturnsAsync(true);
-        _serviceMock.Setup(s => s.CreateAsync(It.IsAny<Product>())).ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.CategoryExistsAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _serviceMock
+            .Setup(s => s.CreateAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
 
-        var result = await _controller.Create(product);
+        var result = await _controller.Create(product, CancellationToken.None);
 
         var created = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         created.StatusCode.Should().Be(StatusCodes.Status201Created);
@@ -92,9 +103,11 @@ public class ProductsControllerTests
     public async Task Create_InvalidCategoryId_Returns400()
     {
         var product = CreateProduct(1, "MacBook Pro", 999);
-        _repositoryMock.Setup(r => r.CategoryExistsAsync(999)).ReturnsAsync(false);
+        _repositoryMock
+            .Setup(r => r.CategoryExistsAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
-        var result = await _controller.Create(product);
+        var result = await _controller.Create(product, CancellationToken.None);
 
         var bad = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         bad.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
@@ -107,9 +120,11 @@ public class ProductsControllerTests
     [Fact]
     public async Task Update_NonExistentProduct_Returns404()
     {
-        _serviceMock.Setup(s => s.GetByIdAsync(999)).ReturnsAsync((Product?)null);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Product?)null);
 
-        var result = await _controller.Update(999, new Dictionary<string, object?> { ["name"] = "Updated" });
+        var result = await _controller.Update(999, new Dictionary<string, object?> { ["name"] = "Updated" }, CancellationToken.None);
 
         result.Should().BeOfType<NotFoundObjectResult>()
             .Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
@@ -119,10 +134,14 @@ public class ProductsControllerTests
     public async Task Update_InvalidCategoryId_Returns400()
     {
         var product = CreateProduct(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
-        _repositoryMock.Setup(r => r.CategoryExistsAsync(999)).ReturnsAsync(false);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.CategoryExistsAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
-        var result = await _controller.Update(1, new Dictionary<string, object?> { ["categoryId"] = "999" });
+        var result = await _controller.Update(1, new Dictionary<string, object?> { ["categoryId"] = "999" }, CancellationToken.None);
 
         result.Should().BeOfType<BadRequestObjectResult>()
             .Which.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
@@ -133,10 +152,14 @@ public class ProductsControllerTests
     {
         var product = CreateProduct(1, "MacBook Pro", 1);
         var productWithCategory = CreateProductWithCategory(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1)).ReturnsAsync(productWithCategory);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(productWithCategory);
 
-        var result = await _controller.Update(1, new Dictionary<string, object?> { ["name"] = "MacBook Pro Updated" });
+        var result = await _controller.Update(1, new Dictionary<string, object?> { ["name"] = "MacBook Pro Updated" }, CancellationToken.None);
 
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(StatusCodes.Status200OK);
@@ -149,12 +172,18 @@ public class ProductsControllerTests
     {
         var product = CreateProduct(1, "MacBook Pro", 1);
         var productWithCategory = CreateProductWithCategory(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1)).ReturnsAsync(productWithCategory);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(productWithCategory);
 
-        await _controller.Update(1, new Dictionary<string, object?> { ["stock"] = "20" });
+        await _controller.Update(1, new Dictionary<string, object?> { ["stock"] = "20" }, CancellationToken.None);
 
-        _serviceMock.Verify(s => s.UpdateAsync(It.Is<Product>(p => p.UpdatedAt != null)), Times.Once);
+        _serviceMock.Verify(
+            s => s.UpdateAsync(It.Is<Product>(p => p.UpdatedAt != null), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -163,14 +192,18 @@ public class ProductsControllerTests
         var product = CreateProduct(1, "MacBook Pro", 1);
         var originalCreatedAt = product.CreatedAt;
         var productWithCategory = CreateProductWithCategory(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1)).ReturnsAsync(productWithCategory);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
+        _repositoryMock
+            .Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(productWithCategory);
 
         await _controller.Update(1, new Dictionary<string, object?>
         {
             ["id"] = 999,
             ["createdAt"] = "2000-01-01"
-        });
+        }, CancellationToken.None);
 
         product.Id.Should().Be(1);
         product.CreatedAt.Should().Be(originalCreatedAt);
@@ -184,20 +217,24 @@ public class ProductsControllerTests
     public async Task Delete_ExistingProduct_Returns204()
     {
         var product = CreateProduct(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1)).ReturnsAsync(product);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
 
-        var result = await _controller.Delete(1);
+        var result = await _controller.Delete(1, CancellationToken.None);
 
         result.Should().BeOfType<NoContentResult>();
-        _serviceMock.Verify(s => s.DeleteAsync(1), Times.Once);
+        _serviceMock.Verify(s => s.DeleteAsync(1, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Delete_NonExistentProduct_Returns404()
     {
-        _serviceMock.Setup(s => s.GetByIdAsync(999)).ReturnsAsync((Product?)null);
+        _serviceMock
+            .Setup(s => s.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Product?)null);
 
-        var result = await _controller.Delete(999);
+        var result = await _controller.Delete(999, CancellationToken.None);
 
         result.Should().BeOfType<NotFoundObjectResult>()
             .Which.StatusCode.Should().Be(StatusCodes.Status404NotFound);
