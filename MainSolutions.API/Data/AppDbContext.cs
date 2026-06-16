@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<EntityImage> EntityImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -56,6 +57,19 @@ public class AppDbContext : DbContext
                   .WithMany(c => c.Products)
                   .HasForeignKey(p => p.CategoryId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<EntityImage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EntityType)
+                .IsRequired()
+                .HasMaxLength(64);
+            entity.Property(e => e.ImagePath)
+                .IsRequired()
+                .HasMaxLength(2048);
+            // Composite index so fetching by entity is fast.
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
         });
     }
 }

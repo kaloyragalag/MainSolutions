@@ -1,0 +1,254 @@
+/* ── ProductImageGallery ─────────────────────────────────────────────────── */
+
+.img-gallery {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-4);
+  margin-bottom:  var(--space-5);
+  /* Prevents the horizontally-scrolling track below from forcing this
+     flex/grid item (and therefore the whole crud-detail panel) wider than
+     its allotted column — without this, overflow-x: auto on the track has
+     no effect because the track's intrinsic content width leaks upward. */
+  min-width:      0;
+  width:          100%;
+}
+
+.img-gallery__label {
+  font-size:   var(--font-size-sm);
+  font-weight: 600;
+  color:       var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Drop zone ──────────────────────────────────────────────────────────── */
+.img-gallery__dropzone {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             var(--space-2);
+  width:           100%;
+  min-height:      120px;
+  border:          2px dashed var(--color-border);
+  border-radius:   var(--radius-md);
+  background:      var(--color-bg-app);
+  color:           var(--color-text-tertiary);
+  cursor:          pointer;
+  transition:      border-color var(--transition-fast), background var(--transition-fast);
+  padding:         var(--space-5) var(--space-4);
+  text-align:      center;
+}
+
+.img-gallery__dropzone:hover,
+.img-gallery__dropzone--active {
+  border-color: var(--color-primary);
+  background:   var(--color-primary-light);
+  color:        var(--color-primary);
+}
+
+.img-gallery__dropzone-icon {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           44px;
+  height:          44px;
+  border-radius:   var(--radius-md);
+  background:      var(--color-bg-surface);
+  color:           var(--color-text-tertiary);
+  margin-bottom:   var(--space-1);
+}
+
+.img-gallery__dropzone--active .img-gallery__dropzone-icon {
+  background: var(--color-primary-light);
+  color:      var(--color-primary);
+}
+
+.img-gallery__dropzone-title {
+  font-size:   var(--font-size-base);
+  font-weight: 600;
+  color:       var(--color-text-primary);
+}
+
+.img-gallery__dropzone--active .img-gallery__dropzone-title {
+  color: var(--color-primary);
+}
+
+.img-gallery__dropzone-hint {
+  font-size: var(--font-size-xs);
+  color:     var(--color-text-tertiary);
+}
+
+/* ── Thumbnails row (horizontal scroll, no wrap) ───────────────────────── */
+.img-gallery__track {
+  display:       flex;
+  gap:           var(--space-3);
+  width:         100%;
+  min-width:     0;
+  overflow-x:    auto;
+  overflow-y:    hidden;
+  padding-bottom: var(--space-2); /* room for scrollbar so thumbs aren't clipped */
+  scrollbar-width: thin;
+}
+
+.img-gallery__track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.img-gallery__track::-webkit-scrollbar-track {
+  background:    var(--color-bg-app);
+  border-radius: var(--radius-sm);
+}
+
+.img-gallery__track::-webkit-scrollbar-thumb {
+  background:    var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.img-gallery__track::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+.img-gallery__thumb {
+  position:      relative;
+  flex:          0 0 auto;
+  width:         140px;
+  height:        140px;
+  border-radius: var(--radius-md);
+  overflow:      hidden;
+  border:        1px solid var(--color-border);
+  background:    var(--color-bg-app);
+  cursor:        grab;
+}
+
+.img-gallery__thumb:active {
+  cursor: grabbing;
+}
+
+.img-gallery__thumb--dragging {
+  opacity:   0.4;
+  transform: scale(0.96);
+}
+
+.img-gallery__thumb--dragover {
+  border-color: var(--color-primary);
+  box-shadow:   0 0 0 2px var(--color-primary-light);
+}
+
+.img-gallery__thumb--deleting {
+  cursor: default;
+}
+
+.img-gallery__thumb--deleting img {
+  opacity: 0.35;
+}
+
+.img-gallery__thumb-deleting {
+  position:        absolute;
+  inset:           0;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  gap:             var(--space-1);
+  font-size:       11px;
+  font-weight:     600;
+  color:           var(--color-text-secondary);
+  background:      rgba(255, 255, 255, 0.55);
+}
+
+.img-gallery__thumb img {
+  width:      100%;
+  height:     100%;
+  object-fit: cover;
+  display:    block;
+}
+
+/* Badge on first image */
+.img-gallery__thumb:first-child::after {
+  content:       'Primary';
+  position:      absolute;
+  bottom:        4px;
+  left:          4px;
+  font-size:     10px;
+  font-weight:   700;
+  color:         #fff;
+  background:    var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding:       1px 5px;
+  pointer-events: none;
+}
+
+/* Delete button overlay */
+.img-gallery__thumb-delete {
+  position:        absolute;
+  top:             4px;
+  right:           4px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           22px;
+  height:          22px;
+  border-radius:   50%;
+  border:          none;
+  background:      rgba(0, 0, 0, 0.55);
+  color:           #fff;
+  cursor:          pointer;
+  opacity:         0;
+  transition:      opacity var(--transition-fast);
+  padding:         0;
+  line-height:     1;
+}
+
+.img-gallery__thumb:hover .img-gallery__thumb-delete {
+  opacity: 1;
+}
+
+.img-gallery__thumb-delete:hover {
+  background: var(--color-danger, #e53e3e);
+}
+
+/* ── Upload progress ────────────────────────────────────────────────────── */
+.img-gallery__progress {
+  display:        flex;
+  flex-direction: column;
+  gap:            var(--space-1);
+}
+
+.img-gallery__progress-label {
+  display:         flex;
+  justify-content: space-between;
+  font-size:       var(--font-size-sm);
+  color:           var(--color-text-secondary);
+}
+
+.img-gallery__progress-track {
+  width:         100%;
+  height:        6px;
+  border-radius: var(--radius-sm);
+  background:    var(--color-bg-app);
+  overflow:      hidden;
+}
+
+.img-gallery__progress-fill {
+  height:        100%;
+  background:    var(--color-primary);
+  border-radius: var(--radius-sm);
+  transition:    width 0.15s ease-out;
+}
+
+/* Indeterminate state (e.g. while images list is loading, no % known) */
+.img-gallery__progress-fill--indeterminate {
+  width:      40% !important;
+  animation:  img-gallery-indeterminate 1.1s ease-in-out infinite;
+}
+
+@keyframes img-gallery-indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+/* ── States ─────────────────────────────────────────────────────────────── */
+.img-gallery__error {
+  margin-top: var(--space-2);
+}

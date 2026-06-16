@@ -8,7 +8,6 @@ export interface Product {
   stock: number;
   categoryId: number;
   category?: Category;
-  imagePath?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;

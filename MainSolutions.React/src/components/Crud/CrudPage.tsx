@@ -36,6 +36,8 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   toFormData,
   icon,
   imageField,
+  customDetailSlot,
+  onSelectedItemChange,
 }: CrudPageProps<T, TForm>) {
   const pluralName = entityNamePlural ?? `${entityName}s`;
 
@@ -75,6 +77,16 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   const error = extraError ?? list.error;
 
   const selectedItem = list.items.find((i) => i.id === list.selectedId) ?? null;
+
+  // Notify the parent page whenever the selected item changes, so any
+  // side effects needed by customDetailSlot (e.g. fetching related data)
+  // can live in the page component instead of inside the render-prop —
+  // customDetailSlot itself must stay hook-free since it's invoked
+  // conditionally during this component's render pass.
+  React.useEffect(() => {
+    onSelectedItemChange?.(selectedItem);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem?.id]);
 
   const listIcon = icon ?? <DefaultIcon />;
   const detailIcon = icon ?? <DefaultIconLg />;
@@ -285,6 +297,10 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                   </button>
                 )}
               </div>
+
+              {/* Custom per-entity content (e.g. multi-image gallery). Rendered
+                  as a plain function call — it must not use React hooks. */}
+              {customDetailSlot && customDetailSlot(selectedItem)}
 
               <div className="crud-detail__section">
                 <h3 className="ms-h3" style={{ marginBottom: 'var(--space-2)' }}>

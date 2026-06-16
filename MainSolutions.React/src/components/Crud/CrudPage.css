@@ -138,6 +138,12 @@
   border-radius: var(--radius-md);
   padding:       var(--space-6);
   min-height:    320px;
+  /* Grid items default to min-width: auto, which lets a child's intrinsic
+     content width (e.g. the unscrolled width of ProductImageGallery's
+     horizontal track) force this column wider than its 1fr track. Setting
+     min-width: 0 lets the column actually respect the grid track so
+     overflow-x: auto inside the gallery works as intended. */
+  min-width:     0;
 }
 
 .crud-detail__breadcrumb {

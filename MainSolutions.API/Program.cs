@@ -76,6 +76,7 @@ builder.Services.AddScoped<IEntityPatcher, ReflectionEntityPatcher>();
 builder.Services.Configure<AzureStorageOptions>(
     builder.Configuration.GetSection(AzureStorageOptions.SectionName));
 builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
+builder.Services.AddScoped<IEntityImageRepository, EntityImageRepository>();
 
 
 var app = builder.Build();
