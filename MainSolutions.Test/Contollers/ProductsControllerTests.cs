@@ -15,13 +15,15 @@ public class ProductsControllerTests
     private readonly Mock<IProductService> _serviceMock;
     private readonly Mock<IProductRepository> _repositoryMock;
     private readonly ProductsController _controller;
+    private readonly Mock<IBlobStorageService> _blobStorageMock;
 
-    public ProductsControllerTests()
-    {
-        _serviceMock = new Mock<IProductService>();
-        _repositoryMock = new Mock<IProductRepository>();
-        _controller = new ProductsController(_serviceMock.Object, _repositoryMock.Object, new ReflectionEntityPatcher());
-    }
+public ProductsControllerTests()
+{
+    _serviceMock = new Mock<IProductService>();
+    _repositoryMock = new Mock<IProductRepository>();
+    _blobStorageMock = new Mock<IBlobStorageService>();
+    _controller = new ProductsController(_serviceMock.Object, _repositoryMock.Object, new ReflectionEntityPatcher(), _blobStorageMock.Object);
+}
 
     #region GetAll
 
@@ -275,6 +277,41 @@ public class ProductsControllerTests
             CreatedAt = DateTime.UtcNow
         }
     };
+
+    #endregion
+
+    #region UploadImage
+
+    [Fact]
+    public async Task UploadImage_ValidFile_UploadsAndUpdatesPath()
+    {
+        var product = CreateProduct(1, "MacBook Pro", 1);
+        var productWithCategory = CreateProductWithCategory(1, "MacBook Pro", 1);
+        _serviceMock.Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(product);
+        _blobStorageMock
+            .Setup(b => b.UploadAsync(It.IsAny<Stream>(), "photo.png", "image/png", It.IsAny<CancellationToken>()))
+            .ReturnsAsync("https://storage.blob.core.windows.net/product-images/abc.png");
+        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(productWithCategory);
+
+        var content = new byte[] { 1, 2, 3 };
+        var stream = new MemoryStream(content);
+        var file = new FormFile(stream, 0, content.Length, "file", "photo.png") { Headers = new HeaderDictionary(), ContentType = "image/png" };
+
+        var result = await _controller.UploadImage(1, file, CancellationToken.None);
+
+        result.Should().BeOfType<OkObjectResult>();
+        product.ImagePath.Should().Be("https://storage.blob.core.windows.net/product-images/abc.png");
+    }
+
+    [Fact]
+    public async Task UploadImage_NonExistentProduct_Returns404()
+    {
+        _serviceMock.Setup(s => s.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Product?)null);
+
+        var result = await _controller.UploadImage(999, null!, CancellationToken.None);
+
+        result.Should().BeOfType<NotFoundObjectResult>();
+    }
 
     #endregion
 }

@@ -1,5 +1,6 @@
 using System.Text;
 using MainSolutions.API.Data;
+using MainSolutions.API.Options;
 using MainSolutions.API.Repositories;
 using MainSolutions.API.Repositories.Interfaces;
 using MainSolutions.API.Services;
@@ -72,6 +73,10 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<IEntityPatcher, ReflectionEntityPatcher>();
+builder.Services.Configure<AzureStorageOptions>(
+    builder.Configuration.GetSection(AzureStorageOptions.SectionName));
+builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
+
 
 var app = builder.Build();
 

@@ -65,6 +65,13 @@ const ProductPage: React.FC = () => {
       getItemSubtitle={product => product.category?.name || product.description || 'No description'}
       formFields={formFields}
       detailRows={detailRows}
+      imageField={{
+        getImageUrl: product => product.imagePath,
+        altText: product => product.name,
+        upload: (id, file) => productService.uploadImage(id, file),
+        remove: id => productService.deleteImage(id),
+        maxSizeBytes: 5 * 1024 * 1024,
+      }}
     />
   );
 };

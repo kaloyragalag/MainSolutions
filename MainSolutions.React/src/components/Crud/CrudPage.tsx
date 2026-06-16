@@ -14,6 +14,7 @@ import {
   EmptyIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ImageIcon
 } from './CrudIcons';
 import { CrudPageProps, EntityBase } from './CrudPage.types';
 import './CrudPage.css';
@@ -34,6 +35,7 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   detailRows,
   toFormData,
   icon,
+  imageField,
 }: CrudPageProps<T, TForm>) {
   const pluralName = entityNamePlural ?? `${entityName}s`;
 
@@ -86,6 +88,48 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
   const handleOpenEdit = (item: T) => {
     if (!allowUpdate) return;
     form.openEditModal(item);
+  };
+
+  const [imageUploading, setImageUploading] = React.useState(false);
+  const [imageError, setImageError] = React.useState<string | null>(null);
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+
+  const imageUrl = imageField && selectedItem ? imageField.getImageUrl(selectedItem) : null;
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !imageField || !selectedItem) return;
+
+    if (imageField.maxSizeBytes && file.size > imageField.maxSizeBytes) {
+      setImageError(`Image must be ${Math.round(imageField.maxSizeBytes / (1024 * 1024))}MB or smaller.`);
+      return;
+    }
+
+    setImageError(null);
+    setImageUploading(true);
+    try {
+      await imageField.upload(selectedItem.id, file);
+      await list.refetch(list.page);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Failed to upload image.');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleImageRemove = async () => {
+    if (!imageField?.remove || !selectedItem) return;
+    setImageError(null);
+    setImageUploading(true);
+    try {
+      await imageField.remove(selectedItem.id);
+      await list.refetch(list.page);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : 'Failed to remove image.');
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   return (
@@ -185,7 +229,48 @@ function CrudPage<T extends EntityBase, TForm extends Record<string, any>>({
                 <span className="crud-detail__icon">{detailIcon}</span>
                 <h2 className="ms-h2">{getItemTitle(selectedItem)}</h2>
               </div>
+              {imageField && (
+                <div className="crud-detail__image">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={imageField.altText?.(selectedItem) ?? getItemTitle(selectedItem)}
+                      className="crud-detail__image-preview"
+                    />
+                  ) : (
+                    <div className="crud-detail__image-placeholder">
+                      <ImageIcon />
+                    </div>
+                  )}
 
+                  {allowUpdate && (
+                    <div className="crud-detail__image-actions">
+                      <input
+                        ref={imageInputRef}
+                        type="file"
+                        accept={imageField.accept ?? 'image/*'}
+                        style={{ display: 'none' }}
+                        onChange={handleImageChange}
+                      />
+                      <button
+                        className="ms-btn ms-btn--secondary ms-btn--sm"
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={imageUploading}
+                      >
+                        {imageUploading && <span className="ms-btn__spinner" />}
+                        {imageUrl ? 'Replace image' : 'Upload image'}
+                      </button>
+                      {imageUrl && imageField.remove && (
+                        <button className="ms-btn ms-btn--danger ms-btn--sm" onClick={handleImageRemove} disabled={imageUploading}>
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {imageError && <div className="ms-alert ms-alert--danger">{imageError}</div>}
+                </div>
+              )}
               <div className="crud-detail__actions">
                 {allowUpdate && (
                   <button className="ms-btn ms-btn--secondary" onClick={() => handleOpenEdit(selectedItem)}>

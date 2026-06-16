@@ -242,3 +242,37 @@
   resize:     vertical;
   line-height: 1.5;
 }
+/* ── Image ────────────────────────────────────────── */
+.crud-detail__image {
+  display:        flex;
+  flex-direction: column;
+  align-items:    flex-start;
+  gap:            var(--space-3);
+  margin-bottom:  var(--space-5);
+}
+
+.crud-detail__image-preview {
+  width:         160px;
+  height:        160px;
+  object-fit:    cover;
+  border-radius: var(--radius-md);
+  border:        1px solid var(--color-border);
+  background:    var(--color-bg-app);
+}
+
+.crud-detail__image-placeholder {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           160px;
+  height:          160px;
+  border-radius:   var(--radius-md);
+  border:          1px dashed var(--color-border);
+  background:      var(--color-bg-app);
+  color:           var(--color-text-tertiary);
+}
+
+.crud-detail__image-actions {
+  display: flex;
+  gap:     var(--space-2);
+}

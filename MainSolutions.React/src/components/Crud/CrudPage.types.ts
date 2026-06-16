@@ -50,4 +50,26 @@ export interface CrudPageProps<T extends EntityBase, TForm extends Record<string
   icon?: React.ReactNode;
 }
 
+// MainSolutions.React/src/components/Crud/CrudPage.types.ts
+export interface CrudImageField<T> {
+  /** Returns the current image URL for an item, or null/undefined if none. */
+  getImageUrl: (item: T) => string | null | undefined;
+  /** Optional alt text for the preview image. */
+  altText?: (item: T) => string;
+  /** Uploads a new image for the entity; returns the updated entity. */
+  upload: (id: number, file: File) => Promise<T>;
+  /** Removes the current image; returns the updated entity. */
+  remove?: (id: number) => Promise<T>;
+  /** Accepted file types for the picker (default: 'image/*'). */
+  accept?: string;
+  /** Client-side max size check, in bytes. */
+  maxSizeBytes?: number;
+}
+
+export interface CrudPageProps<T extends EntityBase, TForm extends Record<string, any>> {
+  // ...existing props...
+  /** Optional image upload/preview section shown in the detail panel. */
+  imageField?: CrudImageField<T>;
+}
+
 export type { EntityBase };
