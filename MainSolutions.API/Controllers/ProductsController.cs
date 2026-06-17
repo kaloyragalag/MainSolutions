@@ -7,13 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace MainSolutions.API.Controllers;
 
 [Authorize]
-public class ProductsController : BaseController<Product>
+public class ProductsController : BaseImageController<Product>
 {
-    private const string EntityType = "product";
-
     private readonly IProductRepository _productRepository;
-    private readonly IBlobStorageService _blobStorage;
-    private readonly IEntityImageRepository _imageRepository;
 
     public ProductsController(
         IProductService service,
@@ -21,12 +17,15 @@ public class ProductsController : BaseController<Product>
         IEntityPatcher patcher,
         IBlobStorageService blobStorage,
         IEntityImageRepository imageRepository)
-        : base(service, patcher)
+        : base(service, patcher, blobStorage, imageRepository)
     {
         _productRepository = repository;
-        _blobStorage = blobStorage;
-        _imageRepository = imageRepository;
     }
+
+    /// <summary>Identifies this entity's images in the shared EntityImage table.</summary>
+    protected override string EntityType => "product";
+
+    protected override string EntityDisplayName => "Product";
 
     // ── BaseController overrides ───────────────────────────────────────────
 
@@ -89,112 +88,4 @@ public class ProductsController : BaseController<Product>
     }
 
     protected override object GetEntityId(Product entity) => entity.Id;
-
-    // ── Multi-image endpoints ──────────────────────────────────────────────
-
-    /// <summary>Returns all images for a product, ordered by SortOrder.</summary>
-    [Authorize(Roles = "Admin,Editor,Viewer")]
-    [HttpGet("{id:int}/images")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetImages(int id, CancellationToken cancellationToken)
-    {
-        var product = await _service.GetByIdAsync(id, cancellationToken);
-        if (product is null)
-            return NotFound(new { message = $"Product with id {id} was not found." });
-
-        var images = await _imageRepository.GetByEntityAsync(EntityType, id, cancellationToken);
-        return Ok(images);
-    }
-
-    /// <summary>
-    /// Uploads one or more images for a product.
-    /// Accepts multipart/form-data with field name "files".
-    /// </summary>
-    [Authorize(Roles = "Admin,Editor")]
-    [HttpPost("{id:int}/images")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UploadImages(
-        int id, IFormFileCollection files, CancellationToken cancellationToken)
-    {
-        var product = await _service.GetByIdAsync(id, cancellationToken);
-        if (product is null)
-            return NotFound(new { message = $"Product with id {id} was not found." });
-
-        if (files is null || files.Count == 0)
-            return BadRequest(new { message = "No files were provided." });
-
-        var existing = await _imageRepository.GetByEntityAsync(EntityType, id, cancellationToken);
-        var nextSort = existing.Count > 0 ? existing.Max(i => i.SortOrder) + 1 : 0;
-
-        var uploaded = new List<EntityImage>();
-
-        foreach (var file in files)
-        {
-            if (file.Length == 0) continue;
-
-            await using var stream = file.OpenReadStream();
-            var url = await _blobStorage.UploadAsync(
-                stream, file.FileName, file.ContentType, cancellationToken);
-
-            var image = await _imageRepository.AddAsync(new EntityImage
-            {
-                EntityType = EntityType,
-                EntityId   = id,
-                ImagePath  = url,
-                SortOrder  = nextSort++,
-            }, cancellationToken);
-
-            uploaded.Add(image);
-        }
-
-        return Ok(uploaded);
-    }
-
-    /// <summary>Deletes a single image by its own id.</summary>
-    [Authorize(Roles = "Admin,Editor")]
-    [HttpDelete("{id:int}/images/{imageId:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteImage(
-        int id, int imageId, CancellationToken cancellationToken)
-    {
-        var image = await _imageRepository.GetByIdAsync(imageId, cancellationToken);
-        if (image is null || image.EntityType != EntityType || image.EntityId != id)
-            return NotFound(new { message = $"Image with id {imageId} was not found for product {id}." });
-
-        try { await _blobStorage.DeleteAsync(image.ImagePath, cancellationToken); }
-        catch { /* best-effort; orphaned blobs handled by storage lifecycle policy */ }
-
-        await _imageRepository.DeleteAsync(imageId, cancellationToken);
-        return NoContent();
-    }
-
-    /// <summary>
-    /// Updates the display order of images.
-    /// Body: [{ "id": 3, "sortOrder": 0 }, { "id": 7, "sortOrder": 1 }, …]
-    /// </summary>
-    [Authorize(Roles = "Admin,Editor")]
-    [HttpPatch("{id:int}/images/reorder")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ReorderImages(
-        int id, [FromBody] List<ImageSortItem> items, CancellationToken cancellationToken)
-    {
-        var product = await _service.GetByIdAsync(id, cancellationToken);
-        if (product is null)
-            return NotFound(new { message = $"Product with id {id} was not found." });
-
-        await _imageRepository.ReorderAsync(
-            items.Select(x => (x.Id, x.SortOrder)), cancellationToken);
-
-        var updated = await _imageRepository.GetByEntityAsync(EntityType, id, cancellationToken);
-        return Ok(updated);
-    }
 }
-
-/// <param name="Id">EntityImage.Id</param>
-/// <param name="SortOrder">Target zero-based display order.</param>
-public record ImageSortItem(int Id, int SortOrder);
