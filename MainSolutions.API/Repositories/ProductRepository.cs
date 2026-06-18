@@ -1,6 +1,6 @@
 using MainSolutions.API.Data;
 using MainSolutions.API.Models;
-using MainSolutions.API.Models.DTOs;
+using MainSolutions.API.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

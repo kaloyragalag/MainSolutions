@@ -1,4 +1,4 @@
-using MainSolutions.API.Models.DTOs;
+using MainSolutions.API.DTOs;
 
 namespace MainSolutions.API.Repositories.Interfaces;
 

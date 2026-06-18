@@ -1,12 +1,7 @@
 using System.Text;
 using MainSolutions.API.Data;
-using MainSolutions.API.Options;
-using MainSolutions.API.Repositories;
-using MainSolutions.API.Repositories.Interfaces;
-using MainSolutions.API.Services;
-using MainSolutions.API.Services.Interfaces;
+using MainSolutions.API.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -59,25 +54,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ITokenService, JwtTokenService>();
-builder.Services.AddScoped<IEntityPatcher, ReflectionEntityPatcher>();
-builder.Services.Configure<AzureStorageOptions>(
-    builder.Configuration.GetSection(AzureStorageOptions.SectionName));
-builder.Services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
-builder.Services.AddScoped<IEntityImageRepository, EntityImageRepository>();
-
+builder.Services.AddApplicationServices(builder.Configuration);
 
 var app = builder.Build();
 

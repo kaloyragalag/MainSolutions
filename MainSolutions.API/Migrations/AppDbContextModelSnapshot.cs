@@ -22,7 +22,7 @@ namespace MainSolutions.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MainSolutions.API.Models.Category", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -57,7 +57,7 @@ namespace MainSolutions.API.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.Customer", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -130,7 +130,7 @@ namespace MainSolutions.API.Migrations
                     b.ToTable("Customers");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.EntityImage", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.EntityImage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,7 +170,7 @@ namespace MainSolutions.API.Migrations
                     b.ToTable("EntityImages");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.Product", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -213,7 +213,7 @@ namespace MainSolutions.API.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.User", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -260,20 +260,20 @@ namespace MainSolutions.API.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.Customer", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Customer", b =>
                 {
-                    b.HasOne("MainSolutions.API.Models.User", "User")
+                    b.HasOne("MainSolutions.API.Entities.User", "User")
                         .WithOne("Customer")
-                        .HasForeignKey("MainSolutions.API.Models.Customer", "UserId")
+                        .HasForeignKey("MainSolutions.API.Entities.Customer", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.Product", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Product", b =>
                 {
-                    b.HasOne("MainSolutions.API.Models.Category", "Category")
+                    b.HasOne("MainSolutions.API.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -282,12 +282,12 @@ namespace MainSolutions.API.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.Category", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.Category", b =>
                 {
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("MainSolutions.API.Models.User", b =>
+            modelBuilder.Entity("MainSolutions.API.Entities.User", b =>
                 {
                     b.Navigation("Customer");
                 });

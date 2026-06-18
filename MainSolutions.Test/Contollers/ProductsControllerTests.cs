@@ -1,6 +1,6 @@
 using MainSolutions.API.Controllers;
 using MainSolutions.API.Models;
-using MainSolutions.API.Models.DTOs;
+using MainSolutions.API.DTOs;
 using MainSolutions.API.Repositories.Interfaces;
 using MainSolutions.API.Services;
 using MainSolutions.API.Services.Interfaces;
@@ -14,16 +14,23 @@ public class ProductsControllerTests
 {
     private readonly Mock<IProductService> _serviceMock;
     private readonly Mock<IProductRepository> _repositoryMock;
-    private readonly ProductsController _controller;
     private readonly Mock<IBlobStorageService> _blobStorageMock;
+    private readonly Mock<IEntityImageRepository> _imageRepositoryMock;
+    private readonly ProductsController _controller;
 
-public ProductsControllerTests()
-{
-    _serviceMock = new Mock<IProductService>();
-    _repositoryMock = new Mock<IProductRepository>();
-    _blobStorageMock = new Mock<IBlobStorageService>();
-    _controller = new ProductsController(_serviceMock.Object, _repositoryMock.Object, new ReflectionEntityPatcher(), _blobStorageMock.Object);
-}
+    public ProductsControllerTests()
+    {
+        _serviceMock = new Mock<IProductService>();
+        _repositoryMock = new Mock<IProductRepository>();
+        _blobStorageMock = new Mock<IBlobStorageService>();
+        _imageRepositoryMock = new Mock<IEntityImageRepository>();
+        _controller = new ProductsController(
+            _serviceMock.Object,
+            _repositoryMock.Object,
+            new ReflectionEntityPatcher(),
+            _blobStorageMock.Object,
+            _imageRepositoryMock.Object);
+    }
 
     #region GetAll
 
@@ -244,6 +251,10 @@ public ProductsControllerTests()
 
     #endregion
 
+    // Multi-image endpoints (GetImages, UploadImages, DeleteImage, ReorderImages)
+    // are inherited from BaseImageController<Product> and covered by
+    // ProductImageControllerTests.cs rather than duplicated here.
+
     #region Helpers
 
     private static Product CreateProduct(int id, string name, int categoryId) => new()
@@ -279,39 +290,5 @@ public ProductsControllerTests()
     };
 
     #endregion
-
-    #region UploadImage
-
-    [Fact]
-    public async Task UploadImage_ValidFile_UploadsAndUpdatesPath()
-    {
-        var product = CreateProduct(1, "MacBook Pro", 1);
-        var productWithCategory = CreateProductWithCategory(1, "MacBook Pro", 1);
-        _serviceMock.Setup(s => s.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(product);
-        _blobStorageMock
-            .Setup(b => b.UploadAsync(It.IsAny<Stream>(), "photo.png", "image/png", It.IsAny<CancellationToken>()))
-            .ReturnsAsync("https://storage.blob.core.windows.net/product-images/abc.png");
-        _repositoryMock.Setup(r => r.GetByIdWithCategoryAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(productWithCategory);
-
-        var content = new byte[] { 1, 2, 3 };
-        var stream = new MemoryStream(content);
-        var file = new FormFile(stream, 0, content.Length, "file", "photo.png") { Headers = new HeaderDictionary(), ContentType = "image/png" };
-
-        var result = await _controller.UploadImage(1, file, CancellationToken.None);
-
-        result.Should().BeOfType<OkObjectResult>();
-        product.ImagePath.Should().Be("https://storage.blob.core.windows.net/product-images/abc.png");
-    }
-
-    [Fact]
-    public async Task UploadImage_NonExistentProduct_Returns404()
-    {
-        _serviceMock.Setup(s => s.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Product?)null);
-
-        var result = await _controller.UploadImage(999, null!, CancellationToken.None);
-
-        result.Should().BeOfType<NotFoundObjectResult>();
-    }
-
-    #endregion
+    
 }
